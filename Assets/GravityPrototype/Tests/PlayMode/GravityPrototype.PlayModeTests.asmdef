@@ -1,0 +1,6 @@
+{
+  "name": "GravityPrototype.PlayModeTests",
+  "rootNamespace": "GravityPrototype.Tests",
+  "references": ["GravityPrototype.Runtime"],
+  "optionalUnityReferences": ["TestAssemblies"]
+}

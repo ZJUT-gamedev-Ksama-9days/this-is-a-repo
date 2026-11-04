@@ -1,6 +1,0 @@
-{
-  "name": "GravityPrototype.Editor",
-  "rootNamespace": "GravityPrototype.Editor",
-  "references": ["GravityPrototype.Runtime"],
-  "includePlatforms": ["Editor"]
-}
