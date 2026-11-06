@@ -1,0 +1,111 @@
+{
+  "canvas": [
+    1200,
+    675
+  ],
+  "crop": [
+    589,
+    -20,
+    1069,
+    700
+  ],
+  "framePixels": [
+    32,
+    48
+  ],
+  "ppu": 32,
+  "sources": [
+    {
+      "part": "Tail",
+      "file": "尾巴1.psd",
+      "sha256": "962bb06f5724de60f56379a3835187a5bb5a8c4edf72573f3504bf70ea48c6bb",
+      "visibleLayers": [
+        "尾巴"
+      ]
+    },
+    {
+      "part": "LeftHand",
+      "file": "左手1.psd",
+      "sha256": "fc5c61cb1410a9fbafbdce77676de059b4a6da66909a8a1dcf20474371c2215b",
+      "visibleLayers": [
+        "左手"
+      ]
+    },
+    {
+      "part": "Body",
+      "file": "身体1.psd",
+      "sha256": "16c709f062b9b16bbe7d260964712a442872202b0b100d6e473018a301343b42",
+      "visibleLayers": [
+        "图层18"
+      ]
+    },
+    {
+      "part": "RightHand",
+      "file": "右手1.psd",
+      "sha256": "233ef55f0c484e38200d926d7f558e1fd1dea31bc9f363675c326ff8cf71efe5",
+      "visibleLayers": [
+        "右手"
+      ]
+    },
+    {
+      "part": "Ring",
+      "file": "环1.psd",
+      "sha256": "18e761b046dfc56f0dd2be7ec833ce0c9000d97306547fbeb94f0fc91679e4e2",
+      "visibleLayers": [
+        "图层30"
+      ]
+    },
+    {
+      "part": "Neck",
+      "file": "脖子1.psd",
+      "sha256": "8540d7d03876f034d33b50d8e253f2dcbc308fba6fff092967f0b71654113b59",
+      "visibleLayers": [
+        "脖子"
+      ]
+    },
+    {
+      "part": "LeftWing",
+      "file": "左耳翼1.psd",
+      "sha256": "fd750aea59d585d8068e44d007dd3b5c445de622303eda8e0f7c839c304d9aca",
+      "visibleLayers": [
+        "图层22"
+      ]
+    },
+    {
+      "part": "LeftHeadset",
+      "file": "左耳机1.psd",
+      "sha256": "35183b0cc88bd730aa22c41aa852286a6be3583c141ab6bc802d957c184c0908",
+      "visibleLayers": [
+        "图层29"
+      ]
+    },
+    {
+      "part": "Head",
+      "file": "头部1.psd",
+      "sha256": "6f5d048536dde91ce1a5df5735b26d0d9d5223e03affc77a160cb53c70882cdd",
+      "visibleLayers": [
+        "图层7"
+      ]
+    },
+    {
+      "part": "RightWing",
+      "file": "右耳翼1.psd",
+      "sha256": "756331767f4626e7c107d04ad542a521926a47de8dda645eb9c842de0895bb46",
+      "visibleLayers": [
+        "图层21"
+      ]
+    },
+    {
+      "part": "RightHeadset",
+      "file": "右耳机1.psd",
+      "sha256": "86d2d03dca106b6c56cc59f2753590801581fce0ce2f308de8233f6df332ea99",
+      "visibleLayers": [
+        "图层26"
+      ]
+    }
+  ],
+  "reference": {
+    "file": "全身1.psd",
+    "sha256": "2ca10a91c1fb1b88e9195539d24a50fc41cc98f29be3b3c5b27d75efbe10c134"
+  }
+}

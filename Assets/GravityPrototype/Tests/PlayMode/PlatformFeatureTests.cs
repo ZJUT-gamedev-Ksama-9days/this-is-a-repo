@@ -85,16 +85,18 @@ namespace GravityPrototype.Tests
             body.constraints = RigidbodyConstraints2D.FreezeAll;
             Physics2D.SyncTransforms();
             for (int i = 0; i < 6; i++) yield return new WaitForFixedUpdate();
-            Assert.That(health.CurrentHealth, Is.LessThan(100f));
+            Assert.That(health.IsDead, Is.True);
+            Assert.That(health.LastDamageSource, Is.EqualTo(PlayerDamageSource.Spike));
             health.ResetHealth();
             spike.ClearContacts();
             for (int i = 0; i < 4; i++) yield return new WaitForFixedUpdate();
-            Assert.That(health.CurrentHealth, Is.LessThan(100f), "Reset must rediscover an existing overlap.");
+            Assert.That(health.IsDead, Is.True, "Reset must rediscover an existing lethal overlap.");
             spike.enabled = false;
             health.ResetHealth();
             spike.enabled = true;
             for (int i = 0; i < 4; i++) yield return new WaitForFixedUpdate();
-            Assert.That(health.CurrentHealth, Is.LessThan(100f));
+            Assert.That(health.IsDead, Is.True);
+            Assert.That(health.LastDamageSource, Is.EqualTo(PlayerDamageSource.Spike));
         }
 
         [Test]

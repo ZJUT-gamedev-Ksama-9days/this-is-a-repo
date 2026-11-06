@@ -64,6 +64,12 @@ namespace GravityPrototype
                     continue;
                 }
 
+                if (target is PlayerHealth player)
+                {
+                    float applied = player.Kill(PlayerDamageSource.Spike);
+                    if (applied > 0f) DamageDealt?.Invoke(this, target, applied);
+                    continue;
+                }
                 contact.Seconds += step;
                 float totalDamage = damageProfile.EvaluateTotalDamage(contact.Seconds);
                 float delta = totalDamage - contact.AppliedDamage;
@@ -114,7 +120,9 @@ namespace GravityPrototype
 
         private void OnTriggerEnter2D(Collider2D other)
         {
+            if (!isActiveAndEnabled) return;
             IDamageable target = FindTarget(other);
+            if (target is PlayerHealth player) player.Kill(PlayerDamageSource.Spike);
             if (target == null)
             {
                 return;

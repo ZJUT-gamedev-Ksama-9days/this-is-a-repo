@@ -43,8 +43,11 @@ namespace GravityPrototype
         private float coyoteRemaining;
         private bool awaitingJumpSeparation;
 
+        public bool InputBlocked { get; set; }
         public bool IsGrounded { get; private set; }
+        public bool HasGravity => hasGravity;
         public Vector2 UpAxis => upAxis;
+        public float HorizontalInput => horizontalInput;
         /// <summary>Position and linear velocity at the start of the latest physics step.</summary>
         public Vector2 PositionBeforeSimulation { get; private set; }
         public Vector2 VelocityBeforeSimulation { get; private set; }
@@ -63,7 +66,7 @@ namespace GravityPrototype
 
         private void Update()
         {
-            if (!readKeyboardInput || (health != null && health.IsDead))
+            if (!readKeyboardInput || InputBlocked || (health != null && health.IsDead))
             {
                 return;
             }
@@ -79,6 +82,12 @@ namespace GravityPrototype
         /// <summary>Accepts keyboard, replay or scripted input; jumpPressed means the press edge, not held.</summary>
         public void SetInput(float horizontal, bool jumpPressed)
         {
+            if (InputBlocked)
+            {
+                horizontalInput = 0f;
+                jumpBufferRemaining = 0f;
+                return;
+            }
             if (health != null && health.IsDead)
             {
                 return;

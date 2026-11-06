@@ -101,7 +101,7 @@ namespace GravityPrototype.Tests
             Assert.That(impact.LastHeadImpactImpulse, Is.LessThanOrEqualTo(5.001f));
             Assert.That(health.CurrentHealth, Is.EqualTo(100f));
             ResetContact();
-            PlaceBall(new Vector2(0f, 1.6f), Vector2.down * 6f);
+            PlaceBall(new Vector2(0f, 1.6f), Vector2.down * 18f);
             Step(15);
             Assert.That(impact.LastHeadImpactImpulse, Is.GreaterThan(5f));
             Assert.That(health.CurrentHealth, Is.LessThan(100f));
@@ -136,7 +136,7 @@ namespace GravityPrototype.Tests
         {
             player.constraints = RigidbodyConstraints2D.FreezeRotation;
             ball.mass = 3f;
-            PlaceBall(new Vector2(0f, 1.6f), Vector2.down * 10f);
+            PlaceBall(new Vector2(0f, 1.6f), Vector2.down * 25f);
             player.linearVelocity = Vector2.down * 3f;
             CapturePlayerPreSimulation();
             Step(8);
@@ -150,23 +150,18 @@ namespace GravityPrototype.Tests
             PlaceBall(new Vector2(0f, 1.6f), Vector2.down * 8f);
             Step(8);
             Assert.That(impact.LastNormalImpulse, Is.EqualTo(8f).Within(0.5f));
-            Assert.That(health.LastDamage, Is.EqualTo(impact.CalculateDamageFromImpulse(impact.LastHeadImpactImpulse)).Within(0.001f));
-            Assert.That(health.CurrentHealth, Is.EqualTo(100f - health.LastDamage).Within(0.001f));
+            Assert.That(health.IsDead, Is.False);
+            Assert.That(health.LastDamage, Is.Zero);
+            ResetContact();
+            PlaceBall(new Vector2(0f, 1.6f), Vector2.down * 18f);
+            Step(8);
+            Assert.That(impact.CalculateDamageFromImpulse(impact.LastHeadImpactImpulse), Is.GreaterThanOrEqualTo(6.5f));
+            Assert.That(health.IsDead, Is.True);
             Assert.That(health.LastDamageSource, Is.EqualTo(PlayerDamageSource.BallImpact));
             Assert.That(health.LastBallAverageForce,
                 Is.EqualTo(health.LastBallImpulse / health.LastBallContactDuration).Within(0.001f));
-            float firstDamage = health.LastDamage;
-            ResetContact();
-            PlaceBall(new Vector2(0f, 3f), Vector2.zero);
-            Step(2);
-            ball.linearVelocity = Vector2.down * 12f;
-            impact.SendMessage("FixedUpdate");
-            Step(18);
-            Assert.That(health.LastDamage, Is.EqualTo(impact.CalculateDamageFromImpulse(impact.LastHeadImpactImpulse)).Within(0.001f));
-            Assert.That(health.LastDamage, Is.GreaterThan(firstDamage));
-            float afterHit = health.CurrentHealth;
             Step(60);
-            Assert.That(health.CurrentHealth, Is.EqualTo(afterHit), "One sustained contact must not repeat damage.");
+            Assert.That(health.IsDead, Is.True);
         }
 
         [Test]
@@ -240,16 +235,16 @@ namespace GravityPrototype.Tests
         {
             player.rotation = 180f;
             player.transform.rotation = Quaternion.Euler(0f, 0f, 180f);
-            PlaceBall(new Vector2(0f, -1.6f), Vector2.up * 10f);
+            PlaceBall(new Vector2(0f, -1.6f), Vector2.up * 18f);
             Step(8);
-            Assert.That(health.LastDamage, Is.EqualTo(impact.CalculateDamageFromImpulse(health.LastBallImpulse)).Within(0.001f));
+            Assert.That(health.IsDead, Is.True);
             Assert.That(health.CurrentHealth, Is.LessThan(100f));
             ResetContact();
             player.rotation = -90f;
             player.transform.rotation = Quaternion.Euler(0f, 0f, -90f);
-            PlaceBall(new Vector2(1.6f, 0f), Vector2.left * 10f);
+            PlaceBall(new Vector2(1.6f, 0f), Vector2.left * 18f);
             Step(8);
-            Assert.That(health.LastDamage, Is.EqualTo(impact.CalculateDamageFromImpulse(health.LastBallImpulse)).Within(0.001f));
+            Assert.That(health.IsDead, Is.True);
             Assert.That(health.CurrentHealth, Is.LessThan(100f));
         }
 
@@ -282,7 +277,7 @@ namespace GravityPrototype.Tests
         public void HeadBandBoundary_HeadFacingContactOnly()
         {
             // The upper capsule cap should be hittable diagonally; a horizontal torso strike is not.
-            PlaceBall(new Vector2(0.15f, 2f), new Vector2(-0.6f, -12f));
+            PlaceBall(new Vector2(0.15f, 2f), new Vector2(-0.6f, -18f));
             Step(12);
             Assert.That(health.CurrentHealth, Is.LessThan(100f));
             Assert.That(impact.LastHeadImpactImpulse, Is.GreaterThan(0f));
@@ -320,7 +315,7 @@ namespace GravityPrototype.Tests
             ball.linearVelocity = Vector2.down * 10f;
             impact.SendMessage("FixedUpdate");
             Step(18);
-            Assert.That(health.CurrentHealth, Is.LessThan(100f));
+            Assert.That(health.IsDead, Is.False);
             float afterFirstHealth = health.CurrentHealth;
 
             PlaceBall(new Vector2(0f, 3f), Vector2.zero);
@@ -336,20 +331,19 @@ namespace GravityPrototype.Tests
             ball.linearVelocity = Vector2.down * 10f;
             impact.SendMessage("FixedUpdate");
             Step(18);
-            Assert.That(health.CurrentHealth, Is.LessThan(afterFirstHealth));
+            Assert.That(health.CurrentHealth, Is.EqualTo(afterFirstHealth), "Subthreshold contacts never accumulate into death.");
         }
 
         [Test]
         public void ImpactCooldown_DoesNotBlockFallDamageAndResetClearsIt()
         {
-            Assert.That(health.TakeBallImpactDamage(20f, 1f), Is.EqualTo(20f));
-            Assert.That(health.TakeBallImpactDamage(20f, 1f), Is.Zero);
-            Assert.That(health.TakeFallDamage(10f), Is.EqualTo(10f));
-            Assert.That(health.LastDamageSource, Is.EqualTo(PlayerDamageSource.Fall));
+            Assert.That(health.TakeBallImpactDamage(6.49f, 1f), Is.Zero);
+            Assert.That(health.TakeBallImpactDamage(6.5f, 1f), Is.EqualTo(100f));
+            Assert.That(health.TakeFallDamage(15f), Is.Zero, "Death is latched.");
             health.ResetHealth();
-            Assert.That(health.LastDamage, Is.Zero);
-            Assert.That(health.LastDamageSource, Is.EqualTo(PlayerDamageSource.None));
-            Assert.That(health.TakeBallImpactDamage(20f, 1f), Is.EqualTo(20f));
+            Assert.That(health.TakeFallDamage(14.99f), Is.Zero);
+            Assert.That(health.TakeFallDamage(15f), Is.EqualTo(100f));
+            Assert.That(health.LastDamageSource, Is.EqualTo(PlayerDamageSource.Fall));
         }
 
         [Test]

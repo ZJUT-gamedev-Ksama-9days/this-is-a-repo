@@ -292,7 +292,7 @@ namespace GravityPrototype.Editor
                     GameObject character = new GameObject("Player");
                     SceneManager.MoveGameObjectToScene(character, scene);
                     character.tag = "Player";
-                    character.transform.position = new Vector3(-6.2f, -3.32f, 0f);
+                    character.transform.position = new Vector3(-6.2f, -3.6075f, 0f);
                     Rigidbody2D body = character.AddComponent<Rigidbody2D>();
                     body.mass = 70f;
                     body.gravityScale = 1f;
@@ -300,7 +300,7 @@ namespace GravityPrototype.Editor
                     body.interpolation = RigidbodyInterpolation2D.Interpolate;
                     body.collisionDetectionMode = CollisionDetectionMode2D.Continuous;
                     CapsuleCollider2D capsule = character.AddComponent<CapsuleCollider2D>();
-                    capsule.size = new Vector2(0.78f, 1.45f);
+                    capsule.size = PixelMetrics.PlayerColliderSize;
                     capsule.sharedMaterial = material;
                     player = character.AddComponent<PlayerController2D>();
                     GameObject visuals = new GameObject("Visuals");

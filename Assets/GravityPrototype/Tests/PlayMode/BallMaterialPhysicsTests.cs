@@ -97,7 +97,7 @@ namespace GravityPrototype.Tests
                 Assert.That(ball.GetComponent<SpriteRenderer>().color, Is.EqualTo(profiles[i].Color));
                 Assert.That(ball.linearVelocity, Is.EqualTo(Vector2.zero));
                 Assert.That(ball.angularVelocity, Is.Zero);
-                Assert.That(health.CurrentHealth, Is.EqualTo(80f));
+                Assert.That(health.IsDead, Is.True);
             }
             Assert.That(controls.SelectBallType(-1), Is.False);
             Assert.That(controls.SelectBallType(3), Is.False);
