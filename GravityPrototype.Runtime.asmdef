@@ -1,0 +1,7 @@
+{
+  "name": "GravityPrototype.Runtime",
+  "rootNamespace": "GravityPrototype",
+  "references": [
+    "UnityEngine.UI"
+  ]
+}
