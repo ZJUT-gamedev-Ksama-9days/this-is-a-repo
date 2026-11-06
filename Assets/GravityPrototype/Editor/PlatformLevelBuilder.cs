@@ -135,7 +135,7 @@ namespace GravityPrototype.Editor
             LevelGoal2D goal = CreateGoal(environment.transform, new Vector2(8.4f, 2.35f),
                 new Vector2(0.9f, 1.5f), square);
 
-            PlayerController2D player = PrototypePlayerFactory.CreatePlayer(scene, new Vector3(-8.2f, -3.45f, 0f));
+            PlayerController2D player = PrototypePlayerFactory.CreatePlayer(scene, new Vector3(-8.2f, -3.7375f, 0f));
             PlayerHealth health = player.GetComponent<PlayerHealth>();
             if (health == null)
             {
@@ -176,6 +176,7 @@ namespace GravityPrototype.Editor
             hudProperties.FindProperty("health").objectReferenceValue = health;
             hudProperties.ApplyModifiedPropertiesWithoutUndo();
 
+            if (SuppliedArtBuilder.IsAvailable) SuppliedArtBuilder.ApplyScene(scene);
             EditorSceneManager.SaveScene(scene, LevelScenePath);
             Debug.Log($"Platform level saved: {LevelScenePath}, rootObjects={scene.rootCount}, "
                 + $"gravity={Physics2D.gravity}, fixedStep={Time.fixedDeltaTime}");

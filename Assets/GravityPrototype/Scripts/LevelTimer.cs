@@ -20,11 +20,12 @@ namespace GravityPrototype
         public event Action<LevelTimer> Finished;
 
         public bool IsRunning { get; private set; }
+        public bool IsPaused { get; private set; }
         public bool HasFinished { get; private set; }
 
         /// <summary>Seconds of the current run, or the final time once stopped.</summary>
         public float ElapsedSeconds =>
-            IsRunning ? (float)Math.Max(0.0, GetNow() - startTime) : (float)finishedSeconds;
+            IsRunning && !IsPaused ? (float)Math.Max(0.0, GetNow() - startTime) : (float)finishedSeconds;
 
         private double GetNow()
         {
@@ -44,6 +45,7 @@ namespace GravityPrototype
             startTime = GetNow() + Math.Max(0.0, startDelay);
             finishedSeconds = 0.0;
             IsRunning = true;
+            IsPaused = false;
             HasFinished = false;
         }
 
@@ -55,17 +57,43 @@ namespace GravityPrototype
                 return (float)finishedSeconds;
             }
 
-            finishedSeconds = Math.Max(0.0, GetNow() - startTime);
+            finishedSeconds = ElapsedSeconds;
             IsRunning = false;
+            IsPaused = false;
             HasFinished = true;
             Finished?.Invoke(this);
             return (float)finishedSeconds;
         }
 
         /// <summary>Clears the clock without starting it, e.g. while a death restart is pending.</summary>
+        public void Pause()
+        {
+            if (!IsRunning || IsPaused) return;
+            finishedSeconds = ElapsedSeconds;
+            IsPaused = true;
+        }
+
+        public void Resume()
+        {
+            if (!IsRunning || !IsPaused) return;
+            startTime = GetNow() - finishedSeconds;
+            IsPaused = false;
+        }
+
+        public void ResumeRunAt(float seconds)
+        {
+            if (float.IsNaN(seconds) || float.IsInfinity(seconds) || seconds < 0f) return;
+            finishedSeconds = seconds;
+            startTime = GetNow() - seconds;
+            IsRunning = true;
+            IsPaused = false;
+            HasFinished = false;
+        }
+
         public void ResetTimer()
         {
             IsRunning = false;
+            IsPaused = false;
             HasFinished = false;
             finishedSeconds = 0.0;
             startTime = GetNow();

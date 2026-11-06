@@ -42,61 +42,37 @@ namespace GravityPrototype
         private bool allowClearingRecords = true;
         [SerializeField] private string footer = "Reach the goal to stop the clock. Best times are saved with PlayerPrefs.";
 
-        private GUIStyle titleStyle;
-        private GUIStyle textStyle;
-        private GUIStyle buttonStyle;
-        private GUIStyle smallStyle;
-
         private void OnGUI()
         {
-            EnsureStyles();
-            float width = Mathf.Min(720f, Screen.width - 32f);
-            GUILayout.BeginArea(new Rect(16f, 16f, width, Mathf.Min(520f, Screen.height - 32f)), GUI.skin.box);
-            GUILayout.Label(headline, titleStyle);
-            GUILayout.Space(8f);
-
+            float width = Mathf.Min(650f, Screen.width - 40f);
+            float left = (Screen.width - width) * 0.5f;
+            float top = Mathf.Max(24f, Screen.height * 0.22f);
+            PixelUI.Panel(new Rect(left, top, width, 310f));
+            GUI.Label(new Rect(left + 28, top + 20, width - 56, 32), headline, PixelUI.Title);
+            GUI.Label(new Rect(left + 28, top + 61, width - 56, 28), "SELECT SECTOR   /   选择关卡", PixelUI.Label);
             if (levels == null || levels.Length == 0)
-            {
-                GUILayout.Label("No levels configured.", textStyle);
-            }
+                GUI.Label(new Rect(left + 28, top + 110, width - 56, 32), "暂无关卡", PixelUI.Label);
             else
+                for (int i = 0; i < levels.Length; i++) DrawPixelEntry(levels[i], new Rect(left + 28, top + 110 + i * 78, width - 56, 66));
+            if (Progress.SaveGameStore.TryLoad(out var save) && PixelUI.Button(new Rect(left+28,top+198,width-56,38),"继续存档 / CONTINUE · "+save.levelId))
             {
-                for (int i = 0; i < levels.Length; i++)
-                {
-                    DrawEntry(levels[i]);
-                }
+                foreach(var entry in levels)
+                    if(entry != null && entry.LevelId == save.levelId && SceneLoadUtility.CanLoadScene(entry.SceneName))
+                    { Progress.SaveGameStore.RequestResumeOnNextLevel(); SceneManager.LoadScene(entry.SceneName); break; }
             }
-
-            GUILayout.FlexibleSpace();
-            GUILayout.Label(footer, smallStyle);
-            GUILayout.EndArea();
+            GUI.Label(new Rect(left + 28, top + 257, width - 56, 36), footer, PixelUI.Label);
         }
 
-        private void DrawEntry(LevelEntry entry)
+        private void DrawPixelEntry(LevelEntry entry, Rect rect)
         {
-            if (entry == null)
-            {
-                return;
-            }
-
+            if (entry == null) return;
+            PixelUI.Fill(rect, PixelUI.PanelColor);
+            GUI.Label(new Rect(rect.x + 12, rect.y + 4, rect.width - 142, 28), entry.DisplayName, PixelUI.Label);
             bool hasRecord = LevelRecordStore.TryGetBestTime(entry.LevelId, out float best);
-            GUILayout.BeginHorizontal(GUI.skin.box);
-            GUILayout.BeginVertical();
-            GUILayout.Label(entry.DisplayName, textStyle);
-            GUILayout.Label("BEST  " + (hasRecord ? LevelRecordStore.FormatTime(best) : noRecordText), smallStyle);
-            GUILayout.EndVertical();
-            GUILayout.FlexibleSpace();
-            if (allowClearingRecords && hasRecord && GUILayout.Button("CLEAR", buttonStyle, GUILayout.Width(90f)))
-            {
+            GUI.Label(new Rect(rect.x + 12, rect.y + 32, rect.width - 142, 26), "BEST " + (hasRecord ? LevelRecordStore.FormatTime(best) : noRecordText), PixelUI.Label);
+            if (PixelUI.Button(new Rect(rect.xMax - 114, rect.y + 12, 102, 40), "开始 >")) StartLevel(entry.SceneName);
+            if (allowClearingRecords && hasRecord && PixelUI.Button(new Rect(rect.xMax - 238, rect.y + 30, 114, 30), "清除记录"))
                 LevelRecordStore.ClearRecord(entry.LevelId);
-            }
-
-            if (GUILayout.Button("START", buttonStyle, GUILayout.Width(110f)))
-            {
-                StartLevel(entry.SceneName);
-            }
-
-            GUILayout.EndHorizontal();
         }
 
         private void StartLevel(string sceneName)
@@ -115,24 +91,5 @@ namespace GravityPrototype
             SceneManager.LoadScene(sceneName);
         }
 
-        private void EnsureStyles()
-        {
-            if (titleStyle != null)
-            {
-                return;
-            }
-
-            titleStyle = new GUIStyle(GUI.skin.label)
-            {
-                fontSize = 24,
-                fontStyle = FontStyle.Bold
-            };
-            titleStyle.normal.textColor = Color.white;
-            textStyle = new GUIStyle(GUI.skin.label) { fontSize = 17 };
-            textStyle.normal.textColor = new Color(0.8f, 0.94f, 1f);
-            buttonStyle = new GUIStyle(GUI.skin.button) { fontSize = 15 };
-            smallStyle = new GUIStyle(GUI.skin.label) { fontSize = 13 };
-            smallStyle.normal.textColor = new Color(0.62f, 0.78f, 0.86f);
-        }
     }
 }

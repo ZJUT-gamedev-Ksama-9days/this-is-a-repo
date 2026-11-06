@@ -93,34 +93,11 @@ namespace GravityPrototype
 
         private void OnGUI()
         {
-            const float buttonWidth = 140f;
-            const float buttonHeight = 34f;
-            Rect button = new Rect(16f, 16f, buttonWidth, buttonHeight);
-            if (GUI.Button(button, showControlsMenu ? "关闭操作说明" : "操作说明"))
+            Rect button = new Rect(16f, 16f, 180f, 38f);
+            if (PixelUI.Button(button, showControlsMenu ? "关闭说明" : "操作说明"))
                 showControlsMenu = !showControlsMenu;
-
-            if (!showControlsMenu) return;
-            float width = Mathf.Min(390f, Screen.width - 32f);
-            float height = 292f;
-            Rect panel = new Rect(16f, 58f, width, height);
-            GUI.Box(panel, GUIContent.none);
-            GUILayout.BeginArea(new Rect(panel.x + 14f, panel.y + 12f, panel.width - 28f, panel.height - 24f));
-            GUILayout.Label("操作说明", GUI.skin.label);
-            GUILayout.Space(8f);
-            GUILayout.Label("A / D 或方向键：移动");
-            GUILayout.Label("空格 / W / 上方向键：跳跃");
-            GUILayout.Label("Q / E：上一个 / 下一个装置");
-            GUILayout.Label("1：重力装置    2：机械臂    3：空手");
-            GUILayout.Space(5f);
-            GUILayout.Label("重力装置：按住鼠标左键拖动重力框");
-            GUILayout.Label("机械臂：左键按住抓取并拖动，松开释放");
-            GUILayout.Label("机械臂：按住鼠标右键推动物体");
-            GUILayout.Label("身体直接推挤物体：仅有极轻微效果");
-            GUILayout.Label("机械臂抓取/拖动：目标须位于重力场内");
-            GUILayout.Space(5f);
-            GUILayout.Label("收起重力装置后保留 1.5 秒，3 秒后完全消散");
-            GUILayout.Label("R：重置位置、生命并重新装备重力装置");
-            GUILayout.EndArea();
+            if (showControlsMenu)
+                PixelUI.Controls(new Rect(16f, 64f, Mathf.Min(600f, Screen.width - 32f), 454f), false);
         }
     }
 }

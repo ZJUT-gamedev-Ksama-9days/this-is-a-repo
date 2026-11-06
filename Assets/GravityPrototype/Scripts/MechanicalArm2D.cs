@@ -27,7 +27,7 @@ namespace GravityPrototype
 
         public Rigidbody2D GrabbedBody { get; private set; }
         public bool CanUse => isActiveAndEnabled && hasFocus && tools != null
-            && tools.IsOperational && tools.Equipped == AstronautTool.MechanicalArm;
+            && tools.IsOperational && !tools.InputBlocked && tools.Equipped == AstronautTool.MechanicalArm;
         public Vector2 Origin => ownerBody != null ? ownerBody.worldCenterOfMass : (Vector2)transform.position;
 
         private void Awake()

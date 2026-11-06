@@ -2,19 +2,24 @@ using UnityEngine;
 
 namespace GravityPrototype
 {
-    public enum PlayerDamageSource { None, Other, Fall, BallImpact }
+    public enum PlayerDamageSource { None, Other, Fall, BallImpact, Spike }
 
-    /// <summary>Player health state; respawning restores health without reloading the scene.</summary>
+    /// <summary>Single-life state; legacy health values remain only for serialized/API compatibility.</summary>
     [DefaultExecutionOrder(-150)]
     [DisallowMultipleComponent]
     public sealed class PlayerHealth : MonoBehaviour, IDamageable
     {
-        [SerializeField, Min(1f), Tooltip("最大生命值；出生和按 R 重置时回满。")]
-        private float maxHealth = 100f;
+        [SerializeField, HideInInspector] private float maxHealth = 100f; // Legacy serialized/API backing; gameplay is alive/dead.
+        [SerializeField, Min(0.001f), Tooltip("旧砸头伤害曲线达到此等效值时死亡；以下不累计伤害。")]
+        private float lethalBallImpactEquivalent = 6.5f;
+        [SerializeField, Min(0.001f), Tooltip("旧摔落伤害曲线达到此等效值时死亡；以下不累计伤害。")]
+        private float lethalFallEquivalent = 15f;
 
         public event System.Action<PlayerHealth> Died;
         public event System.Action<PlayerHealth, float> HealthChanged;
 
+        public float LethalBallImpactEquivalent => lethalBallImpactEquivalent;
+        public float LethalFallEquivalent => lethalFallEquivalent;
         public float MaxHealth => maxHealth;
         public float CurrentHealth { get; private set; }
         public float Fraction => Mathf.Clamp01(CurrentHealth / maxHealth);
@@ -25,7 +30,6 @@ namespace GravityPrototype
         public float LastBallImpulse { get; private set; }
         public float LastBallAverageForce { get; private set; }
         public float LastBallContactDuration { get; private set; }
-        private float nextBallImpactTime = float.NegativeInfinity;
 
         public Vector2 PositionBeforeSimulation { get; private set; }
         public Vector2 VelocityBeforeSimulation { get; private set; }
@@ -60,37 +64,37 @@ namespace GravityPrototype
                 return 0f;
             }
 
-            float previous = CurrentHealth;
-            CurrentHealth = Mathf.Max(0f, CurrentHealth - amount);
-            LastDamage = previous - CurrentHealth;
+            return Kill(PlayerDamageSource.Other);
+        }
+
+        /// <summary>One life only: finite valid hazards either kill or do nothing; no health depletion.</summary>
+        public float Kill(PlayerDamageSource source)
+        {
+            if (IsDead) return 0f;
+            LastDamage = CurrentHealth;
+            CurrentHealth = 0f;
             LastDamageTime = Time.time;
-            LastDamageSource = PlayerDamageSource.Other;
+            LastDamageSource = source;
             HealthChanged?.Invoke(this, -LastDamage);
-            if (IsDead) Died?.Invoke(this);
+            Died?.Invoke(this);
             return LastDamage;
         }
 
         public float TakeFallDamage(float amount)
         {
-            float applied = TakeDamage(amount);
-            if (applied > 0f) LastDamageSource = PlayerDamageSource.Fall;
-            return applied;
+            if (float.IsNaN(amount) || float.IsInfinity(amount) || amount < lethalFallEquivalent) return 0f;
+            return Kill(PlayerDamageSource.Fall);
         }
 
         public float TakeBallImpactDamage(float amount, float cooldown, float normalImpulse = 0f,
             float averageForce = 0f, float contactDuration = 0f)
         {
-            if (Time.time < nextBallImpactTime) return 0f;
-            float applied = TakeDamage(amount);
-            if (applied > 0f)
-            {
-                LastDamageSource = PlayerDamageSource.BallImpact;
-                LastBallImpulse = Mathf.Max(0f, normalImpulse);
-                LastBallAverageForce = Mathf.Max(0f, averageForce);
-                LastBallContactDuration = Mathf.Max(0f, contactDuration);
-                nextBallImpactTime = Time.time + Mathf.Max(0f, cooldown);
-            }
-            return applied;
+            if (IsDead || float.IsNaN(amount) || float.IsInfinity(amount)
+                || amount < lethalBallImpactEquivalent) return 0f;
+            LastBallImpulse = Mathf.Max(0f, normalImpulse);
+            LastBallAverageForce = Mathf.Max(0f, averageForce);
+            LastBallContactDuration = Mathf.Max(0f, contactDuration);
+            return Kill(PlayerDamageSource.BallImpact);
         }
 
         // Preserve the existing float-returning damage API used by fall/head-impact code.
@@ -105,13 +109,14 @@ namespace GravityPrototype
             LastBallImpulse = 0f;
             LastBallAverageForce = 0f;
             LastBallContactDuration = 0f;
-            nextBallImpactTime = float.NegativeInfinity;
             CapturePreSimulationState();
         }
 
         private void OnValidate()
         {
             maxHealth = Mathf.Max(1f, maxHealth);
+            lethalBallImpactEquivalent = Mathf.Max(0.001f, lethalBallImpactEquivalent);
+            lethalFallEquivalent = Mathf.Max(0.001f, lethalFallEquivalent);
         }
     }
 }

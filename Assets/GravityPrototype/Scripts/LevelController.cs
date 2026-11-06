@@ -38,6 +38,7 @@ namespace GravityPrototype
         public PlayerController2D PlayerMovement => playerController;
         public LevelTimer Timer => timer;
         public LevelGoal2D Goal => goal;
+        public bool KeyboardInputBlocked { get; set; }
         public bool IsCompleted { get; private set; }
         public bool IsDeathPending => deathPending;
         public float LastRunSeconds { get; private set; }
@@ -118,7 +119,7 @@ namespace GravityPrototype
                 return;
             }
 
-            if (readKeyboardInput && restartWithRKey && Input.GetKeyDown(KeyCode.R))
+            if (!KeyboardInputBlocked && readKeyboardInput && restartWithRKey && Input.GetKeyDown(KeyCode.R))
             {
                 RestartLevel();
             }

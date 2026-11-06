@@ -22,6 +22,7 @@ namespace GravityPrototype
         private GravityFrameView frameView;
         private float stowedAt = float.NegativeInfinity;
         private bool wasDead;
+        public bool InputBlocked { get; set; }
 
         public AstronautTool Equipped { get; private set; } = AstronautTool.GravityDevice;
         public float FieldVisibility { get; private set; } = 1f;
@@ -49,7 +50,7 @@ namespace GravityPrototype
                 if (mechanicalArm != null) mechanicalArm.Release();
             }
             wasDead = dead;
-            if (readKeyboardInput && IsOperational)
+            if (readKeyboardInput && IsOperational && !InputBlocked)
             {
                 if (Input.GetKeyDown(KeyCode.Q)) Cycle(-1);
                 if (Input.GetKeyDown(KeyCode.E)) Cycle(1);
@@ -68,7 +69,7 @@ namespace GravityPrototype
 
         public bool Equip(AstronautTool tool)
         {
-            if (!IsOperational || (int)tool < 0 || (int)tool > 2) return false;
+            if (!IsOperational || InputBlocked || (int)tool < 0 || (int)tool > 2) return false;
             if (Equipped == tool) return true;
             if (Equipped == AstronautTool.GravityDevice) stowedAt = Time.time;
             if (mechanicalArm != null) mechanicalArm.Release();
