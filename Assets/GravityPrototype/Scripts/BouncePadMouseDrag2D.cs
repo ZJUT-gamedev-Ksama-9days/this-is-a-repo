@@ -38,6 +38,7 @@ namespace GravityPrototype
 
         private void Update()
         {
+            if (Time.timeScale <= 0f) { EndDrag(); return; }
             if (arm != null && arm.CanUse)
             {
                 EndDrag();

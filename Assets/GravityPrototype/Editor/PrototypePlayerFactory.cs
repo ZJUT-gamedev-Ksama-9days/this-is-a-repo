@@ -43,7 +43,7 @@ namespace GravityPrototype.Editor
             body.interpolation = RigidbodyInterpolation2D.Interpolate;
             body.collisionDetectionMode = CollisionDetectionMode2D.Continuous;
             CapsuleCollider2D capsule = character.AddComponent<CapsuleCollider2D>();
-            capsule.size = new Vector2(0.78f, 1.45f);
+            capsule.size = PixelMetrics.PlayerColliderSize;
             capsule.sharedMaterial = material;
             PlayerController2D player = character.AddComponent<PlayerController2D>();
             GameObject visuals = new GameObject("Visuals");

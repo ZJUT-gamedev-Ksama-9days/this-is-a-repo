@@ -226,7 +226,9 @@ namespace GravityPrototype.Tests
         [UnityTest]
         public IEnumerator BodyContact_CapsSustainedDriveWithoutDisablingCollision()
         {
-            PlaceBodies(new Vector2(-5f, 0f), new Vector2(-4.2f, 0f));
+            float separation = player.GetComponent<CapsuleCollider2D>().size.x * 0.5f
+                + ball.GetComponent<CircleCollider2D>().radius * ball.transform.lossyScale.x - 0.015f;
+            PlaceBodies(new Vector2(-5f, 0f), new Vector2(-5f + separation, 0f));
             ball.constraints = RigidbodyConstraints2D.FreezeAll;
             for (int i = 0; i < 2; i++) yield return new WaitForFixedUpdate();
             Assert.That(owner.GetComponent<Collider2D>().IsTouching(ball.GetComponent<Collider2D>()), Is.True);
@@ -297,6 +299,10 @@ namespace GravityPrototype.Tests
         public IEnumerator Grab_AllThreeMaterialsStayStableInActiveField()
         {
             // Isolate spring stability from the separately tested three-second field lifetime.
+            var previousMode = Physics2D.simulationMode;
+            Physics2D.simulationMode = SimulationMode2D.Script;
+            try
+            {
             Set(tools, "fieldHoldSeconds", 30f);
             for (int material = 0; material < 3; material++)
             {
@@ -315,15 +321,19 @@ namespace GravityPrototype.Tests
                 arm.SetAim(new Vector2(-3.5f, 0.5f));
                 for (int i = 0; i < 150; i++)
                 {
-                    // The Editor may lose OS focus during automated runs; focus release has its own test.
-                    typeof(MechanicalArm2D).GetMethod("OnApplicationFocus", PrivateInstance).Invoke(arm, new object[] { true });
-                    yield return new WaitForFixedUpdate();
+                    // Drive the spring deterministically without Editor/OS focus callbacks.
+                    Invoke(arm, "FixedUpdate");
+                    Assert.That(arm.GrabbedBody, Is.SameAs(ball), $"material={material}, step={i}, pos={ball.position}");
+                    Assert.That(scene.GetPhysicsScene2D().Simulate(Time.fixedDeltaTime), Is.True);
                 }
                 Assert.That(arm.GrabbedBody, Is.SameAs(ball), $"material={material}, canUse={arm.CanUse}, influence={region.Influence}, contains={region.Contains(ball.worldCenterOfMass)}, pos={ball.position}, owner={owner.position}, dead={player.GetComponent<PlayerHealth>().IsDead}, equipped={tools.Equipped}, focus={typeof(MechanicalArm2D).GetField("hasFocus", PrivateInstance).GetValue(arm)}");
                 Assert.That(ball.linearVelocity.magnitude, Is.LessThan(2f));
                 Assert.That(ball.position.y, Is.GreaterThan(0.1f));
                 arm.Release();
             }
+            }
+            finally { Physics2D.simulationMode = previousMode; }
+            yield return null;
         }
 
         private void PlaceBodies(Vector2 playerPosition, Vector2 ballPosition)

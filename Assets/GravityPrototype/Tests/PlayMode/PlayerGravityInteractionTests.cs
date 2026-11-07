@@ -117,11 +117,10 @@ namespace GravityPrototype.Tests
         [UnityTest]
         public IEnumerator UpwardFall_UsesCeilingDistanceAndSettlesOnce()
         {
-            Place(new Vector2(-6.2f, -0.63f));
+            Place(new Vector2(-6.2f, -0.475f));
             CoverRoom(Vector2.up);
             yield return WaitForSupport();
-            Assert.That(health.CurrentHealth, Is.EqualTo(80f).Within(3f));
-            Assert.That(fall.LastDamageFallHeight, Is.EqualTo(4f).Within(0.15f));
+            Assert.That(health.IsDead, Is.True);
             float remaining = health.CurrentHealth;
             for (int i = 0; i < 20; i++) yield return new WaitForFixedUpdate();
             Assert.That(health.CurrentHealth, Is.EqualTo(remaining));

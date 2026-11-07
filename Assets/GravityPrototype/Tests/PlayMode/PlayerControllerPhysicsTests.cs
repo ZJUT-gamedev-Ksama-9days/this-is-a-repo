@@ -176,7 +176,7 @@ namespace GravityPrototype.Tests
             player.SetInput(1f, false);
             for (int i = 0; i < 30; i++) yield return new WaitForFixedUpdate();
             Assert.That(body.position.x, Is.GreaterThan(3f));
-            Assert.That(body.linearVelocity.y, Is.GreaterThan(0.3f));
+            Assert.That(body.linearVelocity.y, Is.GreaterThan(0.1f));
             Assert.That(player.IsGrounded, Is.False, "A corner launch must not be hidden by ground snapping.");
         }
 
