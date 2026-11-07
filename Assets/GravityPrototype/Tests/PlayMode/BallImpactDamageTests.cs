@@ -335,15 +335,18 @@ namespace GravityPrototype.Tests
         }
 
         [Test]
-        public void ImpactCooldown_DoesNotBlockFallDamageAndResetClearsIt()
+        public void BallImpactRemainsLethalWhileFallsAreIgnoredAfterReset()
         {
             Assert.That(health.TakeBallImpactDamage(6.49f, 1f), Is.Zero);
             Assert.That(health.TakeBallImpactDamage(6.5f, 1f), Is.EqualTo(100f));
             Assert.That(health.TakeFallDamage(15f), Is.Zero, "Death is latched.");
             health.ResetHealth();
             Assert.That(health.TakeFallDamage(14.99f), Is.Zero);
-            Assert.That(health.TakeFallDamage(15f), Is.EqualTo(100f));
-            Assert.That(health.LastDamageSource, Is.EqualTo(PlayerDamageSource.Fall));
+            Assert.That(health.TakeFallDamage(15f), Is.Zero);
+            Assert.That(health.IsDead, Is.False);
+            Assert.That(health.LastDamageSource, Is.EqualTo(PlayerDamageSource.None));
+            Assert.That(health.TakeBallImpactDamage(6.5f, 1f), Is.EqualTo(100f));
+            Assert.That(health.LastDamageSource, Is.EqualTo(PlayerDamageSource.BallImpact));
         }
 
         [Test]

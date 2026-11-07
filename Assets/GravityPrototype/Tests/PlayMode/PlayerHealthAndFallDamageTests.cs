@@ -96,14 +96,16 @@ namespace GravityPrototype.Tests
             }
             Assert.That(health.IsDead, Is.False);
             Assert.That(health.TakeFallDamage(fallDamage.CalculateDamage(3.749f)), Is.Zero);
-            Assert.That(health.TakeFallDamage(fallDamage.CalculateDamage(3.75f)), Is.EqualTo(100f));
-            Assert.That(health.LastDamageSource, Is.EqualTo(PlayerDamageSource.Fall));
-            Assert.That(deaths, Is.EqualTo(1));
+            foreach (float amount in new[] { 15f, 100f, float.MaxValue, float.NaN, float.PositiveInfinity })
+                Assert.That(health.TakeFallDamage(amount), Is.Zero);
+            Assert.That(health.TakeFallDamage(fallDamage.CalculateDamage(3.75f)), Is.Zero);
+            Assert.That(health.LastDamageSource, Is.EqualTo(PlayerDamageSource.None));
+            Assert.That(deaths, Is.Zero);
             health.ResetHealth();
             health.TakeBallImpactDamage(6.5f, 1f);
             Assert.That(health.IsDead, Is.True);
             Assert.That(health.LastDamageSource, Is.EqualTo(PlayerDamageSource.BallImpact));
-            Assert.That(deaths, Is.EqualTo(2));
+            Assert.That(deaths, Is.EqualTo(1));
         }
 
         [UnityTest]
@@ -137,12 +139,12 @@ namespace GravityPrototype.Tests
         }
 
         [UnityTest]
-        public IEnumerator HigherDrop_DealsMoreDamageOnlyOncePerLanding()
+        public IEnumerator HigherDrops_NeverDamagePlayerAcrossRepeatedLandings()
         {
             PlaceAboveGround(4f);
             yield return WaitForLanding();
             float firstDamage = 100f - health.CurrentHealth;
-            Assert.That(firstDamage, Is.EqualTo(100f));
+            Assert.That(firstDamage, Is.Zero);
             float afterLanding = health.CurrentHealth;
             for (int i = 0; i < 30; i++) yield return new WaitForFixedUpdate();
             Assert.That(health.CurrentHealth, Is.EqualTo(afterLanding), "Persistent ground contacts must not repeat damage.");
@@ -152,8 +154,9 @@ namespace GravityPrototype.Tests
             PlaceAboveGround(6f);
             yield return WaitForLanding();
             float secondDamage = 100f - health.CurrentHealth;
-            Assert.That(secondDamage, Is.EqualTo(100f));
-            Assert.That(secondDamage, Is.EqualTo(firstDamage), "Both falls exceed the instant-death threshold.");
+            Assert.That(secondDamage, Is.Zero);
+            Assert.That(fallDamage.LastDamage, Is.Zero);
+            Assert.That(health.IsDead, Is.False);
         }
 
         [UnityTest]
@@ -162,8 +165,8 @@ namespace GravityPrototype.Tests
             PlaceAboveGround(2f, Mathf.Sqrt(2f * Physics2D.gravity.magnitude * body.gravityScale * 1.8f));
             yield return WaitForLanding();
             Assert.That(fallDamage.LastFallHeight, Is.GreaterThan(3f));
-            Assert.That(health.CurrentHealth, Is.LessThan(100f));
-            Assert.That(fallDamage.LastDamage, Is.EqualTo(100f));
+            Assert.That(health.CurrentHealth, Is.EqualTo(100f));
+            Assert.That(fallDamage.LastDamage, Is.Zero);
         }
 
         [UnityTest]
@@ -177,11 +180,11 @@ namespace GravityPrototype.Tests
             Assert.That(player.IsGrounded, Is.False);
             Assert.That(health.CurrentHealth, Is.EqualTo(100f));
             yield return WaitForLanding();
-            Assert.That(health.IsDead, Is.True);
+            Assert.That(health.IsDead, Is.False);
         }
 
         [UnityTest]
-        public IEnumerator BufferedJumpOnLanding_CannotBypassDamage()
+        public IEnumerator BufferedJumpOnHighLanding_RemainsAliveAndJumps()
         {
             PlaceAboveGround(4f);
             // Queue only near the landing, after any coyote time from the test teleport has expired.
@@ -192,29 +195,30 @@ namespace GravityPrototype.Tests
 
             Assert.That(player.IsGrounded, Is.False);
             Assert.That(health.CurrentHealth, Is.EqualTo(100f));
-            for (int i = 0; i < 100 && health.CurrentHealth == health.MaxHealth; i++)
+            bool jumped = false;
+            for (int i = 0; i < 100; i++)
             {
                 player.SetInput(0f, true);
                 yield return new WaitForFixedUpdate();
+                Assert.That(health.IsDead, Is.False);
+                if (body.linearVelocity.y > 1f) { jumped = true; break; }
             }
-
-            Assert.That(health.IsDead, Is.True);
-            for (int i = 0; i < 3; i++) yield return new WaitForFixedUpdate();
-            Assert.That(body.linearVelocity.y, Is.LessThanOrEqualTo(0.1f), "A buffered jump must not bypass lethal landing.");
+            Assert.That(jumped, Is.True, "A high landing must still consume the buffered jump.");
+            Assert.That(fallDamage.LastDamage, Is.Zero);
         }
 
         [UnityTest]
-        public IEnumerator LethalFall_BlocksMovementUntilFullReset()
+        public IEnumerator HighFall_PreservesMovementAndJumpWithoutReset()
         {
             PlaceAboveGround(6f);
             yield return WaitForLanding();
-            Assert.That(health.IsDead, Is.True);
-            Assert.That(health.CurrentHealth, Is.Zero);
+            Assert.That(health.IsDead, Is.False);
+            Assert.That(health.CurrentHealth, Is.EqualTo(100f));
             player.SetInput(1f, true);
             float before = body.position.x;
             for (int i = 0; i < 10; i++) yield return new WaitForFixedUpdate();
-            Assert.That(body.position.x, Is.EqualTo(before).Within(0.02f));
-            Assert.That(body.linearVelocity.y, Is.LessThan(0.1f));
+            Assert.That(body.position.x, Is.GreaterThan(before));
+            Assert.That(body.linearVelocity.y, Is.GreaterThan(0f));
 
             controls.ResetSimulation();
             for (int i = 0; i < 20; i++) yield return new WaitForFixedUpdate();

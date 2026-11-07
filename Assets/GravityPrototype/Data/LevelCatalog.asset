@@ -14,5 +14,20 @@ MonoBehaviour:
   m_EditorClassIdentifier: GravityPrototype.Runtime::GravityPrototype.Progress.LevelCatalog
   levels:
   - levelId: Level01
-    displayName: "\u7B2C 1 \u5173 \xB7 \u5C16\u523A\u822A\u9053"
+    displayName: "\u8BD5\u9A8C\u822A\u9053 / ORIGINAL"
     sceneName: PlatformLevel
+  - levelId: GridLevel01
+    displayName: "\u7B2C 1 \u5173 / SECTOR 1"
+    sceneName: GridLevel01
+  - levelId: GridLevel02
+    displayName: "\u7B2C 2 \u5173 / SECTOR 2"
+    sceneName: GridLevel02
+  - levelId: GridLevel03
+    displayName: "\u7B2C 3 \u5173 / SECTOR 3"
+    sceneName: GridLevel03
+  - levelId: GridLevel04
+    displayName: "\u7B2C 4 \u5173 / SECTOR 4"
+    sceneName: GridLevel04
+  - levelId: GridLevel05
+    displayName: "\u7B2C 5 \u5173 / SECTOR 5"
+    sceneName: GridLevel05

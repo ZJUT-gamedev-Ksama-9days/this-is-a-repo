@@ -12,7 +12,7 @@ namespace GravityPrototype
         [SerializeField, HideInInspector] private float maxHealth = 100f; // Legacy serialized/API backing; gameplay is alive/dead.
         [SerializeField, Min(0.001f), Tooltip("旧砸头伤害曲线达到此等效值时死亡；以下不累计伤害。")]
         private float lethalBallImpactEquivalent = 6.5f;
-        [SerializeField, Min(0.001f), Tooltip("旧摔落伤害曲线达到此等效值时死亡；以下不累计伤害。")]
+        [SerializeField, HideInInspector] // Legacy serialized value; falling no longer causes damage.
         private float lethalFallEquivalent = 15f;
 
         public event System.Action<PlayerHealth> Died;
@@ -80,11 +80,8 @@ namespace GravityPrototype
             return LastDamage;
         }
 
-        public float TakeFallDamage(float amount)
-        {
-            if (float.IsNaN(amount) || float.IsInfinity(amount) || amount < lethalFallEquivalent) return 0f;
-            return Kill(PlayerDamageSource.Fall);
-        }
+        /// <summary>Compatibility entry point: landing from any height is non-lethal.</summary>
+        public float TakeFallDamage(float amount) => 0f;
 
         public float TakeBallImpactDamage(float amount, float cooldown, float normalImpulse = 0f,
             float averageForce = 0f, float contactDuration = 0f)

@@ -200,6 +200,11 @@ namespace GravityPrototype
                 if (hazards[i].gameObject.scene == gameObject.scene) hazards[i].ClearContacts();
             }
 
+            foreach (var lever in FindObjectsByType<LeverMechanism2D>(FindObjectsSortMode.None))
+                if (lever.gameObject.scene == gameObject.scene) lever.ResetLever();
+            foreach (var circuit in FindObjectsByType<CircuitSwitch2D>(FindObjectsSortMode.None))
+                if (circuit.gameObject.scene == gameObject.scene) circuit.ResetCircuit();
+
             deathPending = false;
             restartCountdown = 0f;
             IsCompleted = false;

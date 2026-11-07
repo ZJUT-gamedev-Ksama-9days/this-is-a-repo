@@ -35,13 +35,20 @@ namespace GravityPrototype.UI
         internal static readonly Color HandleColor = PixelUI.Hex("BCA5D5");
 
         /// <summary>Returns the scene canvas, creating a scaled overlay canvas and an event system if needed.</summary>
-        public static Canvas EnsureCanvas()
+        public static Canvas EnsureCanvas(UnityEngine.SceneManagement.Scene scene = default)
         {
-            Canvas canvas = Object.FindFirstObjectByType<Canvas>();
+            Canvas canvas = null;
+            if (scene.IsValid())
+            {
+                foreach (var root in scene.GetRootGameObjects())
+                    if ((canvas = root.GetComponentInChildren<Canvas>(true)) != null) break;
+            }
+            else canvas = Object.FindFirstObjectByType<Canvas>();
             if (canvas == null)
             {
                 GameObject canvasObject = new GameObject("UI Canvas",
                     typeof(RectTransform), typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster));
+                if (scene.IsValid()) UnityEngine.SceneManagement.SceneManager.MoveGameObjectToScene(canvasObject, scene);
                 canvas = canvasObject.GetComponent<Canvas>();
                 canvas.renderMode = RenderMode.ScreenSpaceOverlay;
 
@@ -216,7 +223,7 @@ namespace GravityPrototype.UI
             return dim.gameObject.AddComponent<PausePopupView>();
         }
 
-        private static RecordsPopupView BuildRecordsPopup(RectTransform root)
+        internal static RecordsPopupView BuildRecordsPopup(RectTransform root)
         {
             Image dim = CreatePopupRoot("Records Popup", root, out RectTransform window,
                 new Vector2(1100f, 700f));
@@ -285,7 +292,7 @@ namespace GravityPrototype.UI
             background.gameObject.SetActive(false);
         }
 
-        private static SettingsPopupView BuildSettingsPopup(RectTransform root)
+        internal static SettingsPopupView BuildSettingsPopup(RectTransform root)
         {
             Image dim = CreatePopupRoot("Settings Popup", root, out RectTransform window,
                 new Vector2(900f, 600f));
@@ -418,7 +425,7 @@ namespace GravityPrototype.UI
 
             Image handle = CreatePanel("Handle", handleArea, HandleColor, true);
             SetAnchored(handle.rectTransform, new Vector2(0f, 0.5f), new Vector2(0.5f, 0.5f),
-                Vector2.zero, new Vector2(28f, 44f));
+                Vector2.zero, new Vector2(28f, 0f));
 
             slider.fillRect = fill.rectTransform;
             slider.handleRect = handle.rectTransform;

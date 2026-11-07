@@ -115,12 +115,13 @@ namespace GravityPrototype.Tests
         }
 
         [UnityTest]
-        public IEnumerator UpwardFall_UsesCeilingDistanceAndSettlesOnce()
+        public IEnumerator UpwardFall_LandingOnCeilingNeverKills()
         {
             Place(new Vector2(-6.2f, -0.475f));
             CoverRoom(Vector2.up);
             yield return WaitForSupport();
-            Assert.That(health.IsDead, Is.True);
+            Assert.That(health.IsDead, Is.False);
+            Assert.That(fall.LastDamage, Is.Zero);
             float remaining = health.CurrentHealth;
             for (int i = 0; i < 20; i++) yield return new WaitForFixedUpdate();
             Assert.That(health.CurrentHealth, Is.EqualTo(remaining));
@@ -138,7 +139,7 @@ namespace GravityPrototype.Tests
             region.transform.position = Vector2.one * 100f;
             yield return WaitForSupport();
             Assert.That(body.position.y, Is.LessThan(-3f));
-            Assert.That(health.CurrentHealth, Is.LessThan(50f));
+            Assert.That(health.CurrentHealth, Is.EqualTo(100f));
             controls.ResetSimulation();
             Assert.That(health.CurrentHealth, Is.EqualTo(100f));
             Assert.That(Mathf.Abs(body.rotation), Is.LessThan(0.01f));

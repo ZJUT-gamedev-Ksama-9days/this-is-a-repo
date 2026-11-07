@@ -529,6 +529,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b6e0ca0a1eaa4228833fbdbf8bae17a2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: GravityPrototype.Runtime::GravityPrototype.LevelMenuUI
+  catalog: {fileID: 11400000, guid: a954ac012888bea45b92ebc73329f92c, type: 2}
   headline: "GRAVITY / \u8F68\u9053\u8BD5\u70BC"
   levels:
   - levelId: Level01

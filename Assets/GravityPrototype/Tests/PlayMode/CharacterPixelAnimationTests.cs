@@ -79,6 +79,41 @@ namespace GravityPrototype.Tests
             Assert.That(animator.CurrentState,Is.EqualTo("Standing"));
             Assert.That(artwork.sprite.name,Is.EqualTo("Idle_00"));
         }
+        [TestCase(-1f, -1f)]
+        [TestCase(1f, 1f)]
+        public void DirectionInput_ImmediatelyFacesItsMovementDirection(float input, float expectedSign)
+        {
+            Transform visuals = player.transform.Find("Visuals");
+            Vector3 rootScale = player.transform.localScale;
+            Vector3 originalScale = visuals.localScale;
+            Assert.That(artwork.flipX, Is.True, "The authored left-facing frame must be normalized to right.");
+            player.SetInput(input, false);
+            Assert.That(Mathf.Sign(visuals.localScale.x), Is.EqualTo(expectedSign));
+            Assert.That(Mathf.Abs(visuals.localScale.x), Is.EqualTo(Mathf.Abs(originalScale.x)));
+            player.SetInput(0f, false);
+            animator.Tick(false, true, false, 0f, Vector2.zero, Vector2.up, 0.2f);
+            Assert.That(Mathf.Sign(visuals.localScale.x), Is.EqualTo(expectedSign), "Idle retains facing.");
+            Assert.That(player.transform.localScale, Is.EqualTo(rootScale), "Physics root is never mirrored.");
+        }
+
+        [Test]
+        public void DirectionInput_RespectsInvertedGravityAndInputBlocking()
+        {
+            Transform visuals = player.transform.Find("Visuals");
+            Set(player, "upAxis", Vector2.down);
+            Set(player, "moveAxis", Vector2.right);
+            player.SetInput(1f, false);
+            Assert.That(visuals.localScale.x, Is.LessThan(0f), "Inverted local X still faces screen-right.");
+            player.SetInput(-1f, false);
+            Assert.That(visuals.localScale.x, Is.GreaterThan(0f));
+            player.InputBlocked = true;
+            player.SetInput(1f, false);
+            Assert.That(visuals.localScale.x, Is.GreaterThan(0f));
+            player.InputBlocked = false;
+            player.ResetToSpawn();
+            Assert.That(visuals.localScale.x, Is.GreaterThan(0f));
+        }
+
         private static void Set(object target,string name,object value)=>target.GetType().GetField(name,BindingFlags.Instance|BindingFlags.NonPublic).SetValue(target,value);
     }
 }

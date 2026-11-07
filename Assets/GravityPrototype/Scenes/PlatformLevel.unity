@@ -3922,7 +3922,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: GravityPrototype.Runtime::GravityPrototype.GameFlow.LevelFlowController
   level: {fileID: 1558498458}
-  catalog: {fileID: 0}
+  catalog: {fileID: 11400000, guid: a954ac012888bea45b92ebc73329f92c, type: 2}
   pauseController: {fileID: 1558498461}
   victoryEffectSeconds: 2.4
   buildUiWhenMissing: 1

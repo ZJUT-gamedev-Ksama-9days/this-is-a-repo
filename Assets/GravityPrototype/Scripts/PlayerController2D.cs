@@ -59,6 +59,11 @@ namespace GravityPrototype
             gravityBody = GetComponent<GravityBody2D>();
             health = GetComponent<PlayerHealth>();
             fallDamage = GetComponent<PlayerFallDamage2D>();
+            if (visuals == null) visuals = transform.Find("Visuals");
+            // Supplied pixel frames face left; Visuals uses positive X for facing right.
+            var pixelArtwork = visuals != null
+                ? visuals.Find("Pixel Astronaut")?.GetComponent<SpriteRenderer>() : null;
+            if (pixelArtwork != null) pixelArtwork.flipX = true;
             groundFilter = new ContactFilter2D { useTriggers = false };
             spawnPosition = body.position;
             spawnRotation = body.rotation;
@@ -94,6 +99,7 @@ namespace GravityPrototype
             }
 
             horizontalInput = Mathf.Clamp(horizontal, -1f, 1f);
+            UpdateFacing();
             if (jumpPressed)
             {
                 jumpBufferRemaining = Mathf.Max(jumpBufferTime, Time.fixedDeltaTime);
@@ -143,7 +149,7 @@ namespace GravityPrototype
 
             // Ascending a slope is still supported. Only a jump suppresses old support contacts.
             IsGrounded = hasGroundContact && !awaitingJumpSeparation;
-            // Settle a landing before jumping again; a buffered jump must not bypass fall damage.
+            // Record landing distance before consuming a buffered jump; falling is non-lethal.
             if (fallDamage != null)
             {
                 fallDamage.SampleGroundState(IsGrounded, body.position, gravity);
@@ -206,13 +212,17 @@ namespace GravityPrototype
                 jumpBufferRemaining = Mathf.Max(0f, jumpBufferRemaining - Time.fixedDeltaTime);
             }
 
-            if (visuals != null && Mathf.Abs(horizontalInput) > 0.01f)
-            {
-                Vector3 scale = visuals.localScale;
-                Vector2 localRight = new Vector2(upAxis.y, -upAxis.x);
-                scale.x = Mathf.Abs(scale.x) * Mathf.Sign(horizontalInput * Vector2.Dot(moveAxis, localRight));
-                visuals.localScale = scale;
-            }
+            UpdateFacing();
+        }
+
+        private void UpdateFacing()
+        {
+            // Keep the last direction when released, blocked, or dead; never mirror the physics root.
+            if (visuals == null || Mathf.Abs(horizontalInput) <= 0.01f) return;
+            Vector3 scale = visuals.localScale;
+            Vector2 localRight = new Vector2(upAxis.y, -upAxis.x);
+            scale.x = Mathf.Abs(scale.x) * Mathf.Sign(horizontalInput * Vector2.Dot(moveAxis, localRight));
+            visuals.localScale = scale;
         }
 
         private bool HasGroundContact()
