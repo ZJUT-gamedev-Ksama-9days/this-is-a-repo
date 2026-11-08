@@ -32,24 +32,25 @@ namespace GravityPrototype.Tests
                 Assert.That(canvas,Is.Not.Null);
                 var rootUi=canvas.transform.Find("Level Select UI");
                 Assert.That(rootUi,Is.Not.Null);
-                Assert.That(rootUi.GetComponentInChildren<UnityEngine.UI.ScrollRect>(),Is.Not.Null);
                 var settings=rootUi.GetComponentInChildren<GravityPrototype.UI.SettingsPopupView>(true);
-                var records=rootUi.GetComponentInChildren<GravityPrototype.UI.RecordsPopupView>(true);
+                Assert.That(settings,Is.Not.Null,"开始界面要有设置弹窗");
                 var buttons=rootUi.GetComponentsInChildren<UnityEngine.UI.Button>(true);
+                // 设计文档 2.8.2.1：开始 / 继续 / 设置 / 退出游戏
+                foreach(var required in new[]{"Start Button","Continue Button","Settings Button","Quit Button"})
+                    Assert.That(System.Array.Exists(buttons,b=>b.name==required),Is.True,required+" missing");
+                Assert.That(System.Array.Exists(buttons,b=>b.name=="Records Button"),Is.False,"开始界面不再放记录入口");
                 foreach(var b in buttons)if(b.name=="Settings Button")b.onClick.Invoke();
                 Assert.That(settings.IsVisible,Is.True);
                 foreach(var slider in settings.GetComponentsInChildren<UnityEngine.UI.Slider>(true))
                     Assert.That(slider.handleRect.rect.height,Is.LessThanOrEqualTo(48f),
                         "Slider handle must not stretch into the adjacent control.");
+                // 设置：窗口大小 3 档、音量 5 档
+                var resolutionSlider=System.Array.Find(settings.GetComponentsInChildren<UnityEngine.UI.Slider>(true),s=>s.name=="Resolution Slider");
+                Assert.That(resolutionSlider,Is.Not.Null,"缺少窗口大小调节条");
+                Assert.That(resolutionSlider.maxValue,Is.EqualTo(GravityPrototype.Progress.GameSettingsStore.Resolutions.Length-1));
                 foreach(var b in settings.GetComponentsInChildren<UnityEngine.UI.Button>(true))
                     if(b.name=="Close Button")b.onClick.Invoke();
                 Assert.That(settings.IsVisible,Is.False);
-                foreach(var b in buttons)if(b.name=="Records Button")b.onClick.Invoke();
-                Assert.That(records.IsVisible,Is.True);
-                Assert.That(records.Mode,Is.EqualTo(GravityPrototype.UI.RecordsPopupMode.Browse));
-                foreach(var b in records.GetComponentsInChildren<UnityEngine.UI.Button>(true))
-                    if(b.name=="Close Button")b.onClick.Invoke();
-                Assert.That(records.IsVisible,Is.False);
                 var continueButton=System.Array.Find(buttons,b=>b.name=="Continue Button");
                 bool expected=SaveGameStore.TryLoad(out var save)&&catalog.TryGetIndex(save.levelId,out int index)
                     &&SceneLoadUtility.CanLoadScene(catalog.GetLevel(index).SceneName);
@@ -127,6 +128,65 @@ namespace GravityPrototype.Tests
                 pause.SetPaused(PauseReason.SettingsPopup,false);Assert.That(pause.IsPaused,Is.True);
                 pause.ClearAll();Assert.That(Time.timeScale,Is.EqualTo(1f));
                 Assert.That(level.PlayerMovement.InputBlocked,Is.False);
+            }
+            finally
+            {
+                Time.timeScale=1f;
+                if(scene.IsValid()&&scene.isLoaded)SceneManager.UnloadSceneAsync(scene);
+            }
+        }
+
+        private static T FindInScene<T>(Scene scene) where T : Component
+        {
+            foreach(var root in scene.GetRootGameObjects())
+            {
+                var found=root.GetComponentInChildren<T>(true);
+                if(found!=null)return found;
+            }
+            return null;
+        }
+
+        // 2.8.2.1 设置：窗口大小 3 档、音量 5 档
+        [Test] public void Settings_HaveThreeResolutionsAndFiveVolumeSteps()
+        {
+            Assert.That(GameSettingsStore.Resolutions.Length,Is.EqualTo(3));
+            Assert.That(GameSettingsStore.VolumeSteps.Length,Is.EqualTo(5));
+            int before=GameSettingsStore.MasterStep;
+            try
+            {
+                GameSettingsStore.MasterVolume=0.6f;
+                Assert.That(GameSettingsStore.MasterStep,Is.EqualTo(2),"0.6 应吸附到 50% 档");
+                Assert.That(GameSettingsStore.MasterVolume,Is.EqualTo(0.5f).Within(0.001f));
+                GameSettingsStore.EffectStep=99;
+                Assert.That(GameSettingsStore.EffectStep,Is.EqualTo(4),"档位封顶在 4");
+            }
+            finally { GameSettingsStore.MasterStep=before; }
+        }
+
+        // 2.3.2 虚空死亡 + 2.8.2.3 失败弹窗
+        [UnityTest] public IEnumerator VoidDeath_ShowsDefeatPopupAndRetryUnfreezes()
+        {
+            const string path="Assets/GravityPrototype/Scenes/PlatformLevel.unity";
+            yield return SceneManager.LoadSceneAsync(path,LoadSceneMode.Additive);
+            var scene=SceneManager.GetSceneByPath(path);
+            try
+            {
+                var level=FindInScene<LevelController>(scene);
+                var popup=FindInScene<GravityPrototype.UI.DefeatPopupView>(scene);
+                Assert.That(level,Is.Not.Null);
+                Assert.That(popup,Is.Not.Null,"关卡界面应带失败弹窗");
+                yield return null;
+                Assert.That(level.AutoRestartOnDeath,Is.False,"流程层接管后不应自动重开");
+                level.PlayerMovement.transform.position=new Vector3(600f,600f,0f);
+                for(int i=0;i<20&&!level.IsDeathPending;i++)yield return null;
+                Assert.That(level.IsDeathPending,Is.True,"视野外应判定虚空死亡");
+                yield return null;
+                Assert.That(popup.IsVisible,Is.True,"死亡后应弹失败弹窗");
+                Assert.That(Time.timeScale,Is.EqualTo(0f).Within(0.001f));
+                foreach(var b in popup.GetComponentsInChildren<UnityEngine.UI.Button>(true))
+                    if(b.name=="Retry Button")b.onClick.Invoke();
+                yield return null;
+                Assert.That(Time.timeScale,Is.EqualTo(1f).Within(0.001f),"再来一次应解除冻结");
             }
             finally
             {

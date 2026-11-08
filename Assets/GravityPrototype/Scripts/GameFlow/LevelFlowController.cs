@@ -31,6 +31,7 @@ namespace GravityPrototype.GameFlow
         private PausePopupView pausePopup;
         private RecordsPopupView recordsPopup;
         private SettingsPopupView settingsPopup;
+        private DefeatPopupView defeatPopup;
         private VictoryEffectView victoryEffect;
         private ToastView toast;
 
@@ -53,6 +54,9 @@ namespace GravityPrototype.GameFlow
             {
                 level.LevelStarted += HandleLevelStarted;
                 level.LevelCompleted += HandleLevelCompleted;
+                level.PlayerDied += HandleLevelPlayerDied;
+                // 死亡交给失败弹窗处理，不再自动重开。
+                level.AutoRestartOnDeath = false;
             }
 
             if (pauseController != null) pauseController.Initialize(level);
@@ -82,6 +86,7 @@ namespace GravityPrototype.GameFlow
             {
                 level.LevelStarted -= HandleLevelStarted;
                 level.LevelCompleted -= HandleLevelCompleted;
+                level.PlayerDied -= HandleLevelPlayerDied;
             }
 
             StopAllCoroutines();
@@ -133,12 +138,12 @@ namespace GravityPrototype.GameFlow
             pausePopup = GetComponentInChildren<PausePopupView>(true);
             recordsPopup = GetComponentInChildren<RecordsPopupView>(true);
             settingsPopup = GetComponentInChildren<SettingsPopupView>(true);
+            defeatPopup = GetComponentInChildren<DefeatPopupView>(true);
             victoryEffect = GetComponentInChildren<VictoryEffectView>(true);
             toast = GetComponentInChildren<ToastView>(true);
 
             bool complete = hud != null && sideMenu != null && pausePopup != null && recordsPopup != null
-                && settingsPopup != null && victoryEffect != null && toast != null;
-            if (complete || !buildUiWhenMissing)
+                && settingsPopup != null && victoryEffect != null && toast != null;            if (complete || !buildUiWhenMissing)
             {
                 return;
             }
@@ -150,6 +155,7 @@ namespace GravityPrototype.GameFlow
             pausePopup = parts.PausePopup;
             recordsPopup = parts.RecordsPopup;
             settingsPopup = parts.SettingsPopup;
+            defeatPopup = parts.DefeatPopup;
             victoryEffect = parts.VictoryEffect;
             toast = parts.Toast;
         }
@@ -194,6 +200,12 @@ namespace GravityPrototype.GameFlow
             {
                 settingsPopup.Closed += HandleSettingsClosed;
             }
+
+            if (defeatPopup != null)
+            {
+                defeatPopup.RetryClicked += HandleRetryClicked;
+                defeatPopup.QuitClicked += HandleQuitClicked;
+            }
         }
 
         private void HideAllOverlays()
@@ -206,6 +218,7 @@ namespace GravityPrototype.GameFlow
             pausePopup?.Hide();
             recordsPopup?.Hide();
             settingsPopup?.Hide();
+            defeatPopup?.Hide();
             victoryEffect?.Hide();
             toast?.Hide();
         }
@@ -333,10 +346,79 @@ namespace GravityPrototype.GameFlow
             QuitGame();
         }
 
+        // --- defeat ----------------------------------------------------------------------------
+
+        private void HandleLevelPlayerDied(LevelController dead)
+        {
+            if (runCompleted || defeatPopup == null)
+            {
+                return;
+            }
+
+            // 关卡自己开了自动重开时，失败弹窗不接管（测试与脚本关卡会用到）。
+            if (dead != null && dead.AutoRestartOnDeath)
+            {
+                return;
+            }
+
+            if (sideMenu != null && sideMenu.IsVisible)
+            {
+                sideMenu.Show(false);
+                SetPause(PauseReason.SideMenu, false);
+            }
+
+            pausePopup?.Hide();
+            recordsPopup?.Hide();
+            settingsPopup?.Hide();
+            if (hud != null)
+            {
+                hud.SetMenuInteractable(false);
+            }
+
+            defeatPopup.SetTitle(BuildDefeatTitle(dead));
+            defeatPopup.Show();
+            SetPause(PauseReason.Defeat, true);
+        }
+
+        private void HandleRetryClicked()
+        {
+            defeatPopup?.Hide();
+            if (hud != null)
+            {
+                hud.SetMenuInteractable(true);
+            }
+
+            SetPause(PauseReason.Defeat, false);
+            if (level != null)
+            {
+                ReleasePauseBeforeSceneChange();
+                level.RestartLevel();
+            }
+        }
+
+        private string BuildDefeatTitle(LevelController dead)
+        {
+            PlayerHealth health = dead != null ? dead.Player : null;
+            switch (health != null ? health.LastDamageSource : PlayerDamageSource.None)
+            {
+                case PlayerDamageSource.Void: return "掉进了虚空";
+                case PlayerDamageSource.Spike: return "被尖刺贯穿";
+                case PlayerDamageSource.BallImpact: return "被小球爆头";
+                case PlayerDamageSource.Fall: return "摔落失事";
+                default: return "本局失败";
+            }
+        }
+
         private void HandleEscape()
         {
             if (runCompleted)
             {
+                return;
+            }
+
+            if (defeatPopup != null && defeatPopup.IsVisible)
+            {
+                // 失败弹窗只能通过“再来一次 / 结束游戏”离开。
                 return;
             }
 
@@ -483,6 +565,8 @@ namespace GravityPrototype.GameFlow
         private void HandleLevelStarted(LevelController started)
         {
             runCompleted = false;
+            defeatPopup?.Hide();
+            SetPause(PauseReason.Defeat, false);
             if (hud != null)
             {
                 hud.SetMenuInteractable(true);

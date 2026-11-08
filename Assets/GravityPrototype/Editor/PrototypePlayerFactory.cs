@@ -64,7 +64,6 @@ namespace GravityPrototype.Editor
             properties.FindProperty("visuals").objectReferenceValue = visuals.transform;
             properties.ApplyModifiedPropertiesWithoutUndo();
             character.AddComponent<PlayerHealth>();
-            character.AddComponent<PlayerFallDamage2D>();
             PrefabUtility.SaveAsPrefabAssetAndConnect(character, PlayerPrefabPath, InteractionMode.AutomatedAction);
             return player;
         }

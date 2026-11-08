@@ -34,7 +34,6 @@ namespace GravityPrototype
         private Vector2 moveAxis = Vector2.right;
         private bool hasGravity = true;
         private PlayerHealth health;
-        private PlayerFallDamage2D fallDamage;
         private ContactFilter2D groundFilter;
         private Vector2 spawnPosition;
         private float spawnRotation;
@@ -58,7 +57,6 @@ namespace GravityPrototype
             capsule = GetComponent<CapsuleCollider2D>();
             gravityBody = GetComponent<GravityBody2D>();
             health = GetComponent<PlayerHealth>();
-            fallDamage = GetComponent<PlayerFallDamage2D>();
             if (visuals == null) visuals = transform.Find("Visuals");
             // Supplied pixel frames face left; Visuals uses positive X for facing right.
             var pixelArtwork = visuals != null
@@ -150,11 +148,6 @@ namespace GravityPrototype
             // Ascending a slope is still supported. Only a jump suppresses old support contacts.
             IsGrounded = hasGroundContact && !awaitingJumpSeparation;
             // Record landing distance before consuming a buffered jump; falling is non-lethal.
-            if (fallDamage != null)
-            {
-                fallDamage.SampleGroundState(IsGrounded, body.position, gravity);
-            }
-
             if (health != null && health.IsDead)
             {
                 horizontalInput = 0f;
@@ -282,11 +275,6 @@ namespace GravityPrototype
             if (health != null)
             {
                 health.ResetHealth();
-            }
-
-            if (fallDamage != null)
-            {
-                fallDamage.ResetTracking();
             }
 
             if (visuals != null)

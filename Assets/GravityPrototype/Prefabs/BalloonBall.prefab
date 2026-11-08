@@ -105,7 +105,6 @@ GameObject:
   - component: {fileID: 7919737244526031983}
   - component: {fileID: 8044447560871771458}
   - component: {fileID: 6466443788044890057}
-  - component: {fileID: 2400932135443158155}
   m_Layer: 0
   m_Name: BalloonBall
   m_TagString: Untagged
@@ -277,31 +276,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: GravityPrototype.Runtime::GravityPrototype.BallMaterial2D
   profile: {fileID: 11400000, guid: 6d33e3f7fa8e4214ab4035f076fce06b, type: 2}
---- !u!114 &2400932135443158155
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6865432398421401628}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 70b3aa1fa36c13b41b25eb757164ce8b, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: GravityPrototype.Runtime::GravityPrototype.BallImpactDamage2D
-  safeImpactSpeed: 6
-  damagePerSpeed: 8
-  impactDurationSeconds: 0.1
-  safeAverageForce: 50
-  damagePerNewton: 0.1
-  safeHeadImpulse: 5
-  impulseDoublingInterval: 10
-  exponentialDamageScale: 5
-  maxDamagePerHit: 100
-  hitCooldown: 0.4
-  minimumIncomingBallSpeed: 0.25
-  headRegionFraction: 0.35
-  minimumHeadNormalAlignment: 0.55
 --- !u!1 &7969430525870640391
 GameObject:
   m_ObjectHideFlags: 0

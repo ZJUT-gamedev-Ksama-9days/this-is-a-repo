@@ -531,12 +531,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: GravityPrototype.Runtime::GravityPrototype.LevelMenuUI
   catalog: {fileID: 11400000, guid: a954ac012888bea45b92ebc73329f92c, type: 2}
   headline: "GRAVITY / \u8F68\u9053\u8BD5\u70BC"
-  levels:
-  - levelId: Level01
-    displayName: Level 01 - Spike Ascent
-    sceneName: PlatformLevel
-  noRecordText: "\u6682\u65E0\u8BB0\u5F55"
-  allowClearingRecords: 1
   footer: "\u62B5\u8FBE\u7EC8\u70B9 \xB7 \u521B\u9020\u7EAA\u5F55 \xB7 \u907F\u5F00\u81F4\u547D\u5371\u9669"
 --- !u!4 &2145939699
 Transform:

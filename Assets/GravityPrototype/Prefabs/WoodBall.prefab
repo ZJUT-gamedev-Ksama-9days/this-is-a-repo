@@ -196,7 +196,6 @@ GameObject:
   - component: {fileID: 7884009527503469972}
   - component: {fileID: 443787310380474571}
   - component: {fileID: 4594530675625642047}
-  - component: {fileID: 4402076003475448860}
   m_Layer: 0
   m_Name: WoodBall
   m_TagString: Untagged
@@ -369,31 +368,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: GravityPrototype.Runtime::GravityPrototype.BallMaterial2D
   profile: {fileID: 11400000, guid: ac93784c57eb0794f870497ad3ba88ad, type: 2}
---- !u!114 &4402076003475448860
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7486324222078794183}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 70b3aa1fa36c13b41b25eb757164ce8b, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: GravityPrototype.Runtime::GravityPrototype.BallImpactDamage2D
-  safeImpactSpeed: 6
-  damagePerSpeed: 8
-  impactDurationSeconds: 0.1
-  safeAverageForce: 50
-  damagePerNewton: 0.1
-  safeHeadImpulse: 5
-  impulseDoublingInterval: 10
-  exponentialDamageScale: 5
-  maxDamagePerHit: 100
-  hitCooldown: 0.4
-  minimumIncomingBallSpeed: 0.25
-  headRegionFraction: 0.35
-  minimumHeadNormalAlignment: 0.55
 --- !u!1 &7665752750515984449
 GameObject:
   m_ObjectHideFlags: 0

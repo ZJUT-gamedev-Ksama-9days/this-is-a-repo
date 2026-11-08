@@ -12,7 +12,8 @@ namespace GravityPrototype.GameFlow
         PausePopup = 2,
         RecordsPopup = 3,
         SettingsPopup = 4,
-        Victory = 5
+        Victory = 5,
+        Defeat = 6
     }
 
     /// <summary>

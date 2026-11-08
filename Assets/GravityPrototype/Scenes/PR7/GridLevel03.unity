@@ -130,6 +130,7 @@ GameObject:
   - component: {fileID: 101061383}
   - component: {fileID: 101061382}
   - component: {fileID: 101061381}
+  - component: {fileID: 101061384}
   m_Layer: 0
   m_Name: "\u7535\u8DEF\u95E8_0 1,-3"
   m_TagString: Untagged
@@ -257,6 +258,27 @@ Transform:
   m_Children: []
   m_Father: {fileID: 881363073}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &101061384
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 101061380}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8d098f5db4ebabb458ebe87877af1bf8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: GravityPrototype.Runtime::GravityPrototype.CircuitGate2D
+  circuit: {fileID: 59028422544945307}
+  emptyStraight: {fileID: 11400000, guid: cf1642997ac5fb944a2913b61eefc1de, type: 2}
+  poweredStraight: {fileID: 11400000, guid: 04928602836b982498f129beac3a38fa, type: 2}
+  emptyCorner: {fileID: 11400000, guid: 9d0322bc6ec94914c95dcf6633310b04, type: 2}
+  poweredCorner: {fileID: 11400000, guid: 1119d35b0db051342bc4e85665e10901, type: 2}
+  ball: {fileID: 0}
+  leaves: []
+  dropTolerance: 0.2
+  openAlpha: 0.35
 --- !u!1 &145919684
 GameObject:
   m_ObjectHideFlags: 0
@@ -3183,7 +3205,6 @@ GameObject:
   - component: {fileID: 348548082}
   - component: {fileID: 348548081}
   - component: {fileID: 348548080}
-  - component: {fileID: 348548079}
   m_Layer: 0
   m_Name: Physics Ball
   m_TagString: Untagged
@@ -3206,31 +3227,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 881363073}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &348548079
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 348548077}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 70b3aa1fa36c13b41b25eb757164ce8b, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: GravityPrototype.Runtime::GravityPrototype.BallImpactDamage2D
-  safeImpactSpeed: 6
-  damagePerSpeed: 8
-  impactDurationSeconds: 0.1
-  safeAverageForce: 50
-  damagePerNewton: 0.1
-  safeHeadImpulse: 5
-  impulseDoublingInterval: 10
-  exponentialDamageScale: 5
-  maxDamagePerHit: 100
-  hitCooldown: 0.4
-  minimumIncomingBallSpeed: 0.25
-  headRegionFraction: 0.35
-  minimumHeadNormalAlignment: 0.55
 --- !u!114 &348548080
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3471,6 +3467,189 @@ Transform:
   - {fileID: 1677433058}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &632422008
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 632422009}
+  - component: {fileID: 632422015}
+  - component: {fileID: 632422014}
+  - component: {fileID: 632422013}
+  - component: {fileID: 632422012}
+  - component: {fileID: 632422011}
+  m_Layer: 0
+  m_Name: Physics Ball 2
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &632422009
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 632422008}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -3.5, y: 3.05, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 881363073}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &632422011
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 632422008}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a83a158737b03d144beadd0d5046e934, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: GravityPrototype.Runtime::GravityPrototype.BallMaterial2D
+  profile: {fileID: 11400000, guid: ac93784c57eb0794f870497ad3ba88ad, type: 2}
+--- !u!114 &632422012
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 632422008}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 516c6c997499ffb4eba1893bad54ebf7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: GravityPrototype.Runtime::GravityPrototype.GravityBody2D
+--- !u!58 &632422013
+CircleCollider2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 632422008}
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Density: 1
+  m_Material: {fileID: 6200000, guid: f58d3555555ce094ea1e5c3607ad8380, type: 2}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_ForceSendLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_ForceReceiveLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_ContactCaptureLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_CallbackLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_IsTrigger: 0
+  m_UsedByEffector: 0
+  m_CompositeOperation: 0
+  m_CompositeOrder: 0
+  m_Offset: {x: 0, y: 0}
+  m_Radius: 0.42
+--- !u!50 &632422014
+Rigidbody2D:
+  serializedVersion: 5
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 632422008}
+  m_BodyType: 0
+  m_Simulated: 1
+  m_UseFullKinematicContacts: 0
+  m_UseAutoMass: 0
+  m_Mass: 3.0221682
+  m_LinearDamping: 0
+  m_AngularDamping: 0
+  m_GravityScale: 1
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_Interpolate: 0
+  m_SleepingMode: 1
+  m_CollisionDetection: 1
+  m_Constraints: 0
+--- !u!212 &632422015
+SpriteRenderer:
+  serializedVersion: 2
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 632422008}
+  m_Enabled: 1
+  m_CastShadows: 0
+  m_ReceiveShadows: 0
+  m_DynamicOccludee: 1
+  m_StaticShadowCaster: 0
+  m_MotionVectors: 1
+  m_LightProbeUsage: 1
+  m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 0
+  m_RayTraceProcedural: 0
+  m_RayTracingAccelStructBuildFlagsOverride: 0
+  m_RayTracingAccelStructBuildFlags: 1
+  m_SmallMeshCulling: 1
+  m_ForceMeshLod: -1
+  m_MeshLodSelectionBias: 0
+  m_RenderingLayerMask: 1
+  m_RendererPriority: 0
+  m_Materials:
+  - {fileID: 10754, guid: 0000000000000000f000000000000000, type: 0}
+  m_StaticBatchInfo:
+    firstSubMesh: 0
+    subMeshCount: 0
+  m_StaticBatchRoot: {fileID: 0}
+  m_ProbeAnchor: {fileID: 0}
+  m_LightProbeVolumeOverride: {fileID: 0}
+  m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
+  m_PreserveUVs: 0
+  m_IgnoreNormalsForChartDetection: 0
+  m_ImportantGI: 0
+  m_StitchLightmapSeams: 1
+  m_SelectedEditorRenderState: 0
+  m_MinimumChartSize: 4
+  m_AutoUVMaxDistance: 0.5
+  m_AutoUVMaxAngle: 89
+  m_LightmapParameters: {fileID: 0}
+  m_GlobalIlluminationMeshLod: 0
+  m_SortingLayerID: 0
+  m_SortingLayer: 0
+  m_SortingOrder: 0
+  m_MaskInteraction: 0
+  m_Sprite: {fileID: -6476181226818370272, guid: 7864f3bd87952074ea536410a9f2a2cf, type: 3}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_FlipX: 0
+  m_FlipY: 0
+  m_DrawMode: 0
+  m_Size: {x: 0.69375, y: 0.69375}
+  m_AdaptiveModeThreshold: 0.5
+  m_SpriteTileMode: 0
+  m_WasSpriteAssigned: 1
+  m_SpriteSortPoint: 0
 --- !u!1 &658044250
 GameObject:
   m_ObjectHideFlags: 0
@@ -3661,6 +3840,7 @@ MonoBehaviour:
   platform: {fileID: 1897388700}
   platformBody: {fileID: 1897388702}
   stepDegrees: 30
+  autoStepFromPlatform: 1
   rotateSeconds: 0.35
 --- !u!61 &770878957
 BoxCollider2D:
@@ -3879,7 +4059,6 @@ Transform:
   - {fileID: 101061383}
   - {fileID: 955293396}
   - {fileID: 1050899412}
-  - {fileID: 1225444285}
   - {fileID: 1441425388}
   - {fileID: 770878955}
   - {fileID: 1897388700}
@@ -3887,6 +4066,7 @@ Transform:
   - {fileID: 1033420545}
   - {fileID: 318363668}
   - {fileID: 348548078}
+  - {fileID: 632422009}
   m_Father: {fileID: 1651204917801166963}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &955293395
@@ -4074,6 +4254,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: GravityPrototype.Runtime::GravityPrototype.LevelGoal2D
   visualOnReached: {fileID: 0}
+  opensWithBall: 1
+  requiresConnectedCircuit: 1
 --- !u!61 &1033420547
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -4433,8 +4615,6 @@ GameObject:
   m_Component:
   - component: {fileID: 1225444285}
   - component: {fileID: 1225444288}
-  - component: {fileID: 1225444287}
-  - component: {fileID: 1225444286}
   m_Layer: 0
   m_Name: "\u7535\u95F8_0 -9,0"
   m_TagString: Untagged
@@ -4455,73 +4635,8 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 881363073}
+  m_Father: {fileID: 4177045618377685289}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1225444286
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1225444284}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b06619708537caa46b6014bbb3410e25, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: GravityPrototype.Runtime::GravityPrototype.CircuitSwitch2D
-  barriers:
-  - {fileID: 101061381}
-  circuit: {fileID: 59028422544945307}
-  emptyStraight: {fileID: 11400000, guid: cf1642997ac5fb944a2913b61eefc1de, type: 2}
-  poweredStraight: {fileID: 11400000, guid: 04928602836b982498f129beac3a38fa, type: 2}
-  emptyCorner: {fileID: 11400000, guid: 9d0322bc6ec94914c95dcf6633310b04, type: 2}
-  poweredCorner: {fileID: 11400000, guid: 1119d35b0db051342bc4e85665e10901, type: 2}
---- !u!61 &1225444287
-BoxCollider2D:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1225444284}
-  m_Enabled: 1
-  serializedVersion: 3
-  m_Density: 1
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_ForceSendLayers:
-    serializedVersion: 2
-    m_Bits: 4294967295
-  m_ForceReceiveLayers:
-    serializedVersion: 2
-    m_Bits: 4294967295
-  m_ContactCaptureLayers:
-    serializedVersion: 2
-    m_Bits: 4294967295
-  m_CallbackLayers:
-    serializedVersion: 2
-    m_Bits: 4294967295
-  m_IsTrigger: 1
-  m_UsedByEffector: 0
-  m_CompositeOperation: 0
-  m_CompositeOrder: 0
-  m_Offset: {x: 0, y: 0}
-  m_SpriteTilingProperty:
-    border: {x: 0, y: 0, z: 0, w: 0}
-    pivot: {x: 0.5, y: 0.5}
-    oldSize: {x: 0.878125, y: 0.7875}
-    newSize: {x: 0.878125, y: 0.7875}
-    adaptiveTilingThreshold: 0.5
-    drawMode: 0
-    adaptiveTiling: 0
-  m_AutoTiling: 0
-  m_Size: {x: 0.85, y: 0.85}
-  m_EdgeRadius: 0
 --- !u!212 &1225444288
 SpriteRenderer:
   serializedVersion: 2
@@ -4569,7 +4684,7 @@ SpriteRenderer:
   m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 0
   m_SortingLayer: 0
-  m_SortingOrder: 3
+  m_SortingOrder: -1
   m_MaskInteraction: 0
   m_Sprite: {fileID: 2588383683215784579, guid: 9b9009d347b7cb845bf0027ec8127b1d, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
@@ -4946,6 +5061,10 @@ MonoBehaviour:
   deathRestartDelay: 0.7
   restartWithRKey: 1
   readKeyboardInput: 1
+  voidMargin: 0.8
+  playerDiesInVoid: 1
+  ballsReturnFromVoid: 1
+  autoRestartOnDeath: 1
 --- !u!114 &1558498459
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -5918,7 +6037,7 @@ TilemapRenderer:
   m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 0
   m_SortingLayer: 0
-  m_SortingOrder: 2
+  m_SortingOrder: -1
   m_MaskInteraction: 0
   m_ChunkSize: {x: 32, y: 32, z: 32}
   m_ChunkCullingBounds: {x: 0.13147652, y: 0, z: 0}
@@ -6003,7 +6122,8 @@ Transform:
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
-  m_Children: []
+  m_Children:
+  - {fileID: 1225444285}
   m_Father: {fileID: 1651204917801166963}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!483693784 &4661407315687254576

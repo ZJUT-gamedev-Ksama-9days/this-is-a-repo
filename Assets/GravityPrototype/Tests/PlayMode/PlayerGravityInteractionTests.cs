@@ -15,7 +15,6 @@ namespace GravityPrototype.Tests
         private Rigidbody2D body;
         private GravityBody2D gravity;
         private PlayerHealth health;
-        private PlayerFallDamage2D fall;
         private GravityRegion2D region;
         private PhysicsSandboxController controls;
 
@@ -35,7 +34,6 @@ namespace GravityPrototype.Tests
             body = player.GetComponent<Rigidbody2D>();
             gravity = player.GetComponent<GravityBody2D>();
             health = player.GetComponent<PlayerHealth>();
-            fall = player.GetComponent<PlayerFallDamage2D>();
             Assert.That(gravity, Is.Not.Null);
             SetField(player, "readKeyboardInput", false);
             controls.ResetSimulation();
@@ -121,7 +119,6 @@ namespace GravityPrototype.Tests
             CoverRoom(Vector2.up);
             yield return WaitForSupport();
             Assert.That(health.IsDead, Is.False);
-            Assert.That(fall.LastDamage, Is.Zero);
             float remaining = health.CurrentHealth;
             for (int i = 0; i < 20; i++) yield return new WaitForFixedUpdate();
             Assert.That(health.CurrentHealth, Is.EqualTo(remaining));
@@ -152,7 +149,6 @@ namespace GravityPrototype.Tests
             body.position = position;
             body.linearVelocity = Vector2.zero;
             Physics2D.SyncTransforms();
-            fall.ResetTracking();
         }
 
         private void CoverRoom(Vector2 direction)

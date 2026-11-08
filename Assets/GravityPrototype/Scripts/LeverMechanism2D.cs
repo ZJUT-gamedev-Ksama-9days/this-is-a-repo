@@ -22,6 +22,8 @@ namespace GravityPrototype
         private Rigidbody2D platformBody;
         [SerializeField, Range(1f, 180f), Tooltip("单次旋转角度，度。默认 30。")]
         private float stepDegrees = 30f;
+        [SerializeField, Tooltip("按平台朝向自动取角（设计文档 2.3.3）：横平竖直 90°，倾斜 45°。")]
+        private bool autoStepFromPlatform = true;
         [SerializeField, Min(0.01f), Tooltip("一次旋转的平滑过渡时长，秒。")]
         private float rotateSeconds = 0.35f;
 
@@ -62,6 +64,11 @@ namespace GravityPrototype
 
             // A kinematic body owns its rotation; a platform without a body is driven through its Transform.
             homeAngle = UsesBodyRotation ? platformBody.rotation : platform.eulerAngles.z;
+            if (autoStepFromPlatform)
+            {
+                stepDegrees = ResolveStepDegrees(homeAngle);
+            }
+
             fromAngle = homeAngle;
             toAngle = homeAngle;
             angle = homeAngle;
@@ -69,6 +76,13 @@ namespace GravityPrototype
 
         private bool UsesBodyRotation =>
             platformBody != null && platformBody.bodyType == RigidbodyType2D.Kinematic;
+
+        /// <summary>横平竖直的平台一次转 90°，倾斜的平台一次转 45°。</summary>
+        private static float ResolveStepDegrees(float homeAngle)
+        {
+            float offset = Mathf.Abs(Mathf.DeltaAngle(homeAngle, Mathf.Round(homeAngle / 90f) * 90f));
+            return offset < 1f ? 90f : 45f;
+        }
 
         private void OnTriggerEnter2D(Collider2D other)
         {

@@ -97,6 +97,7 @@ namespace GravityPrototype.UI
                 PausePopup = BuildPausePopup(root),
                 RecordsPopup = BuildRecordsPopup(root),
                 SettingsPopup = BuildSettingsPopup(root),
+                DefeatPopup = BuildDefeatPopup(root),
                 VictoryEffect = BuildVictoryEffect(root),
                 Toast = BuildToast(root)
             };
@@ -105,6 +106,7 @@ namespace GravityPrototype.UI
             parts.PausePopup.Hide();
             parts.RecordsPopup.Hide();
             parts.SettingsPopup.Hide();
+            parts.DefeatPopup.Hide();
             parts.VictoryEffect.Hide();
             parts.Toast.Hide();
 
@@ -223,6 +225,36 @@ namespace GravityPrototype.UI
             return dim.gameObject.AddComponent<PausePopupView>();
         }
 
+        /// <summary>失败提示弹窗：再来一次 / 结束游戏。</summary>
+        internal static DefeatPopupView BuildDefeatPopup(RectTransform root)
+        {
+            Image dim = CreatePopupRoot("Defeat Popup", root, out RectTransform window,
+                new Vector2(760f, 380f));
+
+            Text title = CreateText("Defeat Title", window, "本局失败", 46, TextAnchor.MiddleCenter,
+                AccentColor, FontStyle.Bold);
+            SetAnchored(title.rectTransform, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f),
+                new Vector2(0f, -44f), new Vector2(680f, 80f));
+
+            Text hint = CreateText("Defeat Hint", window, "再来一次，或者结束本次游戏", 26,
+                TextAnchor.MiddleCenter, MutedTextColor);
+            SetAnchored(hint.rectTransform, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f),
+                new Vector2(0f, -116f), new Vector2(680f, 48f));
+
+            Text label;
+            Button retry = CreateButton("Retry Button", window, "再来一次",
+                new Vector2(300f, 84f), ButtonAccentColor, out label);
+            SetAnchored(retry.GetComponent<RectTransform>(), new Vector2(0.5f, 0.5f),
+                new Vector2(0.5f, 0.5f), new Vector2(-170f, -50f), new Vector2(300f, 84f));
+
+            Button quit = CreateButton("Quit Button", window, "结束游戏",
+                new Vector2(300f, 84f), ButtonColor, out label);
+            SetAnchored(quit.GetComponent<RectTransform>(), new Vector2(0.5f, 0.5f),
+                new Vector2(0.5f, 0.5f), new Vector2(170f, -50f), new Vector2(300f, 84f));
+
+            return dim.gameObject.AddComponent<DefeatPopupView>();
+        }
+
         internal static RecordsPopupView BuildRecordsPopup(RectTransform root)
         {
             Image dim = CreatePopupRoot("Records Popup", root, out RectTransform window,
@@ -295,7 +327,7 @@ namespace GravityPrototype.UI
         internal static SettingsPopupView BuildSettingsPopup(RectTransform root)
         {
             Image dim = CreatePopupRoot("Settings Popup", root, out RectTransform window,
-                new Vector2(900f, 600f));
+                new Vector2(900f, 700f));
 
             Text title = CreateText("Settings Title", window, "设置", 44, TextAnchor.MiddleLeft,
                 AccentColor, FontStyle.Bold);
@@ -329,11 +361,24 @@ namespace GravityPrototype.UI
             Text fullscreenLabel = CreateText("Fullscreen Label", window, "全屏显示", 30,
                 TextAnchor.MiddleLeft, TextColor);
             SetAnchored(fullscreenLabel.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0f, 0.5f),
-                new Vector2(-400f, -90f), new Vector2(260f, 56f));
+                new Vector2(-400f, -170f), new Vector2(260f, 56f));
 
             Toggle fullscreenToggle = CreateToggle("Fullscreen Toggle", window, new Vector2(52f, 52f));
             SetAnchored(fullscreenToggle.GetComponent<RectTransform>(), new Vector2(0.5f, 0.5f),
-                new Vector2(0f, 0.5f), new Vector2(-90f, -90f), new Vector2(52f, 52f));
+                new Vector2(0f, 0.5f), new Vector2(-90f, -170f), new Vector2(52f, 52f));
+
+            // 窗口大小 3 档（设计文档 2.8.2.1）
+            Text resolutionLabel = CreateText("Resolution Label", window, "窗口大小", 30,
+                TextAnchor.MiddleLeft, TextColor);
+            SetAnchored(resolutionLabel.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0f, 0.5f),
+                new Vector2(-400f, -90f), new Vector2(200f, 56f));
+
+            Text resolutionValue;
+            Slider resolutionSlider = CreateSlider("Resolution Slider", window, "Resolution Value", out resolutionValue);
+            SetAnchored(resolutionSlider.GetComponent<RectTransform>(), new Vector2(0.5f, 0.5f),
+                new Vector2(0.5f, 0.5f), new Vector2(-90f, -90f), new Vector2(420f, 48f));
+            SetAnchored(resolutionValue.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0f, 0.5f),
+                new Vector2(180f, -90f), new Vector2(150f, 56f));
 
             Text label;
             Button reset = CreateButton("Reset Button", window, "恢复默认",

@@ -159,7 +159,6 @@ namespace GravityPrototype.Editor
             ball.interpolation = RigidbodyInterpolation2D.Interpolate;
             ball.collisionDetectionMode = CollisionDetectionMode2D.Continuous;
             ballObject.AddComponent<GravityBody2D>();
-            ballObject.AddComponent<BallImpactDamage2D>();
             GameObject marker = new GameObject("Rotation Marker");
             marker.transform.SetParent(ballObject.transform, false);
             marker.transform.localPosition = new Vector3(0.16f, 0.16f, 0f);
@@ -376,7 +375,6 @@ namespace GravityPrototype.Editor
             // These are scene-instance additions for existing players, never apply instance overrides to the prefab.
             if (player.GetComponent<GravityBody2D>() == null) Undo.AddComponent<GravityBody2D>(player.gameObject);
             if (player.GetComponent<PlayerHealth>() == null) Undo.AddComponent<PlayerHealth>(player.gameObject);
-            if (player.GetComponent<PlayerFallDamage2D>() == null) Undo.AddComponent<PlayerFallDamage2D>(player.gameObject);
             if (player.GetComponent<PlayerHealthHUD>() == null) Undo.AddComponent<PlayerHealthHUD>(player.gameObject);
         }
 

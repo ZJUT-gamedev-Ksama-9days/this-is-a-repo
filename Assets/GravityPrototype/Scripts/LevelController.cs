@@ -26,12 +26,40 @@ namespace GravityPrototype
         private bool restartWithRKey = true;
         [SerializeField] private bool readKeyboardInput = true;
 
+        [Header("虚空 / 越界（设计文档 2.3.2）")]
+        [SerializeField, Tooltip("角色或小球超出相机视野这块距离即视为掉入虚空，米。")]
+        private float voidMargin = 0.8f;
+        [SerializeField, Tooltip("角色掉入虚空立即死亡（走失败流程）。")]
+        private bool playerDiesInVoid = true;
+        [SerializeField, Tooltip("小球掉入虚空后闪一下并回到起始点。")]
+        private bool ballsReturnFromVoid = true;
+
+        [Header("失败流程")]
+        [SerializeField, Tooltip("死亡后自动重开；关闭时由流程层弹失败弹窗（再来一次 / 结束游戏）。")]
+        private bool autoRestartOnDeath = true;
+
+        private Camera viewCamera;
+
+        private sealed class BallSpawn
+        {
+            public Rigidbody2D body;
+            public SpriteRenderer renderer;
+            public Vector2 position;
+            public float rotation;
+            public RigidbodyType2D bodyType;
+            public bool recovering;
+        }
+
+        private BallSpawn[] ballSpawns = new BallSpawn[0];
+
         private bool deathPending;
         private float restartCountdown;
+        private CircuitGate2D[] circuitGates;
 
         public event Action<LevelController> LevelStarted;
         public event Action<LevelController> LevelCompleted;
         public event Action<LevelController> LevelRespawned;
+        public event Action<LevelController> PlayerDied;
 
         public string LevelId => string.IsNullOrWhiteSpace(levelId) ? gameObject.scene.name : levelId;
         public PlayerHealth Player => player;
@@ -41,9 +69,50 @@ namespace GravityPrototype
         public bool KeyboardInputBlocked { get; set; }
         public bool IsCompleted { get; private set; }
         public bool IsDeathPending => deathPending;
+
+        /// <summary>关闭时死亡不再自动重开，由 LevelFlowController 的失败弹窗接管。</summary>
+        public bool AutoRestartOnDeath
+        {
+            get { return autoRestartOnDeath; }
+            set { autoRestartOnDeath = value; }
+        }
         public float LastRunSeconds { get; private set; }
         public bool LastRunWasBest { get; private set; }
         public float BestSeconds => TryGetBestSeconds(out float seconds) ? seconds : 0f;
+
+        /// <summary>
+        /// 电路是否通路（设计文档 2.3.6.3）：场景里的电路门全部接通才算通路，没有电路门的关卡
+        /// 一开始就通路。目标门只有在通路时才会被小球打开。
+        /// </summary>
+        public bool IsCircuitConnected
+        {
+            get
+            {
+                if (circuitGates == null)
+                {
+                    CircuitGate2D[] found = FindObjectsByType<CircuitGate2D>(FindObjectsSortMode.None);
+                    var inScene = new System.Collections.Generic.List<CircuitGate2D>(found.Length);
+                    for (int i = 0; i < found.Length; i++)
+                    {
+                        if (found[i] != null && found[i].gameObject.scene == gameObject.scene) inScene.Add(found[i]);
+                    }
+
+                    circuitGates = inScene.ToArray();
+                }
+
+                if (circuitGates.Length == 0)
+                {
+                    return true;
+                }
+
+                for (int i = 0; i < circuitGates.Length; i++)
+                {
+                    if (circuitGates[i] == null || !circuitGates[i].IsConnected) return false;
+                }
+
+                return true;
+            }
+        }
 
         public bool TryGetBestSeconds(out float seconds)
         {
@@ -73,6 +142,31 @@ namespace GravityPrototype
             {
                 goal = FindFirstObjectByType<LevelGoal2D>();
             }
+
+            viewCamera = Camera.main;
+            CaptureBallSpawns();
+        }
+
+        private void CaptureBallSpawns()
+        {
+            BallMaterial2D[] balls = FindObjectsByType<BallMaterial2D>(FindObjectsSortMode.None);
+            var list = new System.Collections.Generic.List<BallSpawn>(balls.Length);
+            for (int i = 0; i < balls.Length; i++)
+            {
+                if (balls[i] == null || balls[i].gameObject.scene != gameObject.scene) continue;
+                Rigidbody2D body = balls[i].GetComponent<Rigidbody2D>();
+                if (body == null) continue;
+                list.Add(new BallSpawn
+                {
+                    body = body,
+                    renderer = balls[i].GetComponent<SpriteRenderer>(),
+                    position = body.position,
+                    rotation = body.rotation,
+                    bodyType = body.bodyType
+                });
+            }
+
+            ballSpawns = list.ToArray();
         }
 
         private void OnEnable()
@@ -110,6 +204,12 @@ namespace GravityPrototype
         {
             if (deathPending)
             {
+                if (!autoRestartOnDeath)
+                {
+                    // 失败弹窗接管：等到玩家点“再来一次”再重开。
+                    return;
+                }
+
                 restartCountdown -= Time.deltaTime;
                 if (restartCountdown <= 0f)
                 {
@@ -118,6 +218,8 @@ namespace GravityPrototype
 
                 return;
             }
+
+            CheckVoid();
 
             if (!KeyboardInputBlocked && readKeyboardInput && restartWithRKey && Input.GetKeyDown(KeyCode.R))
             {
@@ -202,8 +304,10 @@ namespace GravityPrototype
 
             foreach (var lever in FindObjectsByType<LeverMechanism2D>(FindObjectsSortMode.None))
                 if (lever.gameObject.scene == gameObject.scene) lever.ResetLever();
-            foreach (var circuit in FindObjectsByType<CircuitSwitch2D>(FindObjectsSortMode.None))
-                if (circuit.gameObject.scene == gameObject.scene) circuit.ResetCircuit();
+            // 电路门和电闸无关：只有电路门会断开电路，电闸只是装饰。
+            foreach (var gate in FindObjectsByType<CircuitGate2D>(FindObjectsSortMode.None))
+                if (gate.gameObject.scene == gameObject.scene) gate.Disconnect();
+            circuitGates = null;
 
             deathPending = false;
             restartCountdown = 0f;
@@ -243,6 +347,71 @@ namespace GravityPrototype
             {
                 playerController.enabled = false;
             }
+
+            PlayerDied?.Invoke(this);
+        }
+
+        // --- 虚空 / 越界 ---------------------------------------------------------------
+
+        private void CheckVoid()
+        {
+            if (IsCompleted) return;
+            if (viewCamera == null) viewCamera = Camera.main;
+            if (viewCamera == null) return;
+
+            if (playerDiesInVoid && player != null && !player.IsDead && playerController != null
+                && IsOutsideView(playerController.transform.position))
+            {
+                player.Kill(PlayerDamageSource.Void);
+                return;
+            }
+
+            if (!ballsReturnFromVoid) return;
+            for (int i = 0; i < ballSpawns.Length; i++)
+            {
+                BallSpawn spawn = ballSpawns[i];
+                if (spawn.recovering || spawn.body == null) continue;
+                if (!IsOutsideView(spawn.body.position)) continue;
+                spawn.recovering = true;
+                StartCoroutine(RecoverBallFromVoid(spawn));
+            }
+        }
+
+        /// <summary>相机视野外（带余量）即虚空；相机固定，所以直接用正交尺寸算矩形。</summary>
+        private bool IsOutsideView(Vector2 worldPoint)
+        {
+            Vector2 center = viewCamera.transform.position;
+            float halfHeight = (viewCamera.orthographic ? viewCamera.orthographicSize : 5f) + voidMargin;
+            float halfWidth = halfHeight * Mathf.Max(0.1f, viewCamera.aspect);
+            return Mathf.Abs(worldPoint.x - center.x) > halfWidth
+                || Mathf.Abs(worldPoint.y - center.y) > halfHeight;
+        }
+
+        private System.Collections.IEnumerator RecoverBallFromVoid(BallSpawn spawn)
+        {
+            Rigidbody2D body = spawn.body;
+            if (body == null) { spawn.recovering = false; yield break; }
+
+            if (spawn.renderer != null) spawn.renderer.enabled = false;
+            body.linearVelocity = Vector2.zero;
+            body.angularVelocity = 0f;
+            yield return new WaitForSeconds(0.12f);
+
+            if (body != null)
+            {
+                body.bodyType = spawn.bodyType;
+                body.position = spawn.position;
+                body.rotation = spawn.rotation;
+                body.linearVelocity = Vector2.zero;
+                body.angularVelocity = 0f;
+                body.transform.SetPositionAndRotation(spawn.position, Quaternion.Euler(0f, 0f, spawn.rotation));
+                body.WakeUp();
+            }
+
+            yield return new WaitForSeconds(0.08f);
+            if (spawn.renderer != null) spawn.renderer.enabled = true;
+            if (body != null) body.WakeUp();
+            spawn.recovering = false;
         }
 
         private void HandleGoalReached(LevelGoal2D reachedGoal)

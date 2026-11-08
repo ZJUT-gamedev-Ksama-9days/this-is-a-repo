@@ -117,22 +117,6 @@ namespace GravityPrototype.Tests
         }
 
         [Test]
-        public void ImpactDamage_UsesImpulseWithoutMaterialMultiplierAndStillCapsPerHit()
-        {
-            // Same solver impulse must produce the same force/damage for every profile.
-            // Mass differences belong in the physics collision, not a second damage multiplier.
-            BallImpactDamage2D damage = ball.GetComponent<BallImpactDamage2D>();
-            for (int i = 0; i < 3; i++)
-            {
-                controls.SelectBallType(i);
-                Assert.That(damage.CalculateAverageForce(10f), Is.EqualTo(100f).Within(0.01f));
-                Assert.That(damage.CalculateDamageFromImpulse(15f), Is.EqualTo(5f).Within(0.01f));
-                Assert.That(damage.CalculateDamageFromImpulse(1000f), Is.EqualTo(100f));
-                Assert.That(damage.CalculateDamageFromImpulse(5f), Is.Zero);
-            }
-        }
-
-        [Test]
         public void EqualImpulse_MovesLightBallMoreThanHeavyBall()
         {
             float[] speeds = new float[3];
