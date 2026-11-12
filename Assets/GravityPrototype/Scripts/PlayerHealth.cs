@@ -2,7 +2,7 @@ using UnityEngine;
 
 namespace GravityPrototype
 {
-    public enum PlayerDamageSource { None, Other, Fall, BallImpact, Spike }
+    public enum PlayerDamageSource { None, Other, Fall, BallImpact, Spike, Void }
 
     /// <summary>Single-life state; legacy health values remain only for serialized/API compatibility.</summary>
     [DefaultExecutionOrder(-150)]

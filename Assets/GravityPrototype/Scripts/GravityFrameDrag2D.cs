@@ -9,6 +9,10 @@ namespace GravityPrototype
         [SerializeField] private Camera inputCamera;
         [SerializeField, Tooltip("使用无旋转的正交相机，将整个方框保持在画面内。")]
         private bool constrainToCamera = true;
+        [SerializeField, Tooltip("允许右键切换本框的重力方向：上 → 下 → 左 → 右。仅在指针位于框内时生效。")]
+        private bool allowDirectionChange;
+
+        private static readonly Vector2[] GravityDirections = { Vector2.up, Vector2.down, Vector2.left, Vector2.right };
 
         private GravityRegion2D region;
         private Vector3 pointerOffset;
@@ -24,6 +28,8 @@ namespace GravityPrototype
         }
 
         public bool CanDrag { get; private set; } = true;
+
+        public bool AllowsDirectionChange => allowDirectionChange;
 
         public void SetCanDrag(bool value)
         {
@@ -43,6 +49,11 @@ namespace GravityPrototype
             {
                 dragging = true;
                 pointerOffset = transform.position - pointer;
+            }
+
+            if (allowDirectionChange && Input.GetMouseButtonDown(1) && region.Contains(pointer))
+            {
+                CycleGravityDirection();
             }
 
             if (!Input.GetMouseButton(0))
@@ -98,6 +109,33 @@ namespace GravityPrototype
         public void CancelDrag()
         {
             dragging = false;
+        }
+
+        /// <summary>按 上 → 下 → 左 → 右 的顺序切换本框的重力方向。</summary>
+        public void CycleGravityDirection()
+        {
+            if (region == null)
+            {
+                region = GetComponent<GravityRegion2D>();
+            }
+
+            if (region == null)
+            {
+                return;
+            }
+
+            Vector2 current = region.Direction;
+            int next = 0;
+            for (int i = 0; i < GravityDirections.Length; i++)
+            {
+                if (Vector2.Dot(current, GravityDirections[i]) > 0.99f)
+                {
+                    next = (i + 1) % GravityDirections.Length;
+                    break;
+                }
+            }
+
+            region.SetDirection(GravityDirections[next]);
         }
 
         private void OnDisable()

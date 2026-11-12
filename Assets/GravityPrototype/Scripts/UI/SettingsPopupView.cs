@@ -16,6 +16,8 @@ namespace GravityPrototype.UI
         [SerializeField] private Text masterValueLabel;
         [SerializeField] private Slider effectSlider;
         [SerializeField] private Text effectValueLabel;
+        [SerializeField] private Slider resolutionSlider;
+        [SerializeField] private Text resolutionValueLabel;
         [SerializeField] private Toggle fullscreenToggle;
         [SerializeField] private Button resetButton;
         [SerializeField] private Button closeButton;
@@ -71,6 +73,16 @@ namespace GravityPrototype.UI
                 fullscreenToggle = UiLookup.FindDeep<Toggle>(transform, "Fullscreen Toggle");
             }
 
+            if (resolutionSlider == null)
+            {
+                resolutionSlider = UiLookup.FindDeep<Slider>(transform, "Resolution Slider");
+            }
+
+            if (resolutionValueLabel == null)
+            {
+                resolutionValueLabel = UiLookup.FindDeep<Text>(transform, "Resolution Value");
+            }
+
             if (resetButton == null)
             {
                 resetButton = UiLookup.FindDeep<Button>(transform, "Reset Button");
@@ -90,15 +102,25 @@ namespace GravityPrototype.UI
             if (masterSlider != null)
             {
                 masterSlider.minValue = 0f;
-                masterSlider.maxValue = 1f;
+                masterSlider.maxValue = GameSettingsStore.VolumeSteps.Length - 1;
+                masterSlider.wholeNumbers = true;
                 masterSlider.onValueChanged.AddListener(HandleMasterChanged);
             }
 
             if (effectSlider != null)
             {
                 effectSlider.minValue = 0f;
-                effectSlider.maxValue = 1f;
+                effectSlider.maxValue = GameSettingsStore.VolumeSteps.Length - 1;
+                effectSlider.wholeNumbers = true;
                 effectSlider.onValueChanged.AddListener(HandleEffectChanged);
+            }
+
+            if (resolutionSlider != null)
+            {
+                resolutionSlider.minValue = 0f;
+                resolutionSlider.maxValue = GameSettingsStore.Resolutions.Length - 1;
+                resolutionSlider.wholeNumbers = true;
+                resolutionSlider.onValueChanged.AddListener(HandleResolutionChanged);
             }
 
             if (fullscreenToggle != null)
@@ -124,12 +146,17 @@ namespace GravityPrototype.UI
             {
                 if (masterSlider != null)
                 {
-                    masterSlider.SetValueWithoutNotify(GameSettingsStore.MasterVolume);
+                    masterSlider.SetValueWithoutNotify(GameSettingsStore.MasterStep);
                 }
 
                 if (effectSlider != null)
                 {
-                    effectSlider.SetValueWithoutNotify(GameSettingsStore.EffectVolume);
+                    effectSlider.SetValueWithoutNotify(GameSettingsStore.EffectStep);
+                }
+
+                if (resolutionSlider != null)
+                {
+                    resolutionSlider.SetValueWithoutNotify(GameSettingsStore.ResolutionIndex);
                 }
 
                 if (fullscreenToggle != null)
@@ -152,7 +179,7 @@ namespace GravityPrototype.UI
                 return;
             }
 
-            GameSettingsStore.MasterVolume = value;
+            GameSettingsStore.MasterStep = Mathf.RoundToInt(value);
             UpdateValueLabels();
         }
 
@@ -163,7 +190,18 @@ namespace GravityPrototype.UI
                 return;
             }
 
-            GameSettingsStore.EffectVolume = value;
+            GameSettingsStore.EffectStep = Mathf.RoundToInt(value);
+            UpdateValueLabels();
+        }
+
+        private void HandleResolutionChanged(float value)
+        {
+            if (syncing)
+            {
+                return;
+            }
+
+            GameSettingsStore.ResolutionIndex = Mathf.RoundToInt(value);
             UpdateValueLabels();
         }
 
@@ -192,12 +230,18 @@ namespace GravityPrototype.UI
         {
             if (masterValueLabel != null)
             {
-                masterValueLabel.text = Mathf.RoundToInt(GameSettingsStore.MasterVolume * 100f) + "%";
+                masterValueLabel.text = "档 " + (GameSettingsStore.MasterStep + 1) + " / " + GameSettingsStore.VolumeSteps.Length;
             }
 
             if (effectValueLabel != null)
             {
-                effectValueLabel.text = Mathf.RoundToInt(GameSettingsStore.EffectVolume * 100f) + "%";
+                effectValueLabel.text = "档 " + (GameSettingsStore.EffectStep + 1) + " / " + GameSettingsStore.VolumeSteps.Length;
+            }
+
+            if (resolutionValueLabel != null)
+            {
+                Vector2Int size = GameSettingsStore.CurrentResolution;
+                resolutionValueLabel.text = size.x + " × " + size.y;
             }
         }
     }

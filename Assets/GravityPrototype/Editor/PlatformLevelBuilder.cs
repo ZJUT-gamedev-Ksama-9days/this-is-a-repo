@@ -142,7 +142,6 @@ namespace GravityPrototype.Editor
                 health = player.gameObject.AddComponent<PlayerHealth>();
             }
 
-            if (player.GetComponent<PlayerFallDamage2D>() == null) player.gameObject.AddComponent<PlayerFallDamage2D>();
             PlayerHealthHUD sandboxHud = player.GetComponent<PlayerHealthHUD>();
             if (sandboxHud != null) sandboxHud.enabled = false;
             GameObject framePrefab = AssetDatabase.LoadAssetAtPath<GameObject>(

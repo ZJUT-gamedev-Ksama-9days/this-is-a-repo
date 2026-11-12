@@ -2081,9 +2081,6 @@ PrefabInstance:
     m_AddedComponents:
     - targetCorrespondingSourceObject: {fileID: 5384569681168913507, guid: b4f10c5e29d003a47a8665149817f526, type: 3}
       insertIndex: -1
-      addedObject: {fileID: 494599914887892072}
-    - targetCorrespondingSourceObject: {fileID: 5384569681168913507, guid: b4f10c5e29d003a47a8665149817f526, type: 3}
-      insertIndex: -1
       addedObject: {fileID: 494599914887892077}
     - targetCorrespondingSourceObject: {fileID: 5384569681168913507, guid: b4f10c5e29d003a47a8665149817f526, type: 3}
       insertIndex: -1
@@ -2099,31 +2096,6 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 5024838520215347979, guid: b4f10c5e29d003a47a8665149817f526, type: 3}
   m_PrefabInstance: {fileID: 494599914887892066}
   m_PrefabAsset: {fileID: 0}
---- !u!114 &494599914887892072
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 732343927}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 70b3aa1fa36c13b41b25eb757164ce8b, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: GravityPrototype.Runtime::GravityPrototype.BallImpactDamage2D
-  safeImpactSpeed: 6
-  damagePerSpeed: 8
-  impactDurationSeconds: 0.1
-  safeAverageForce: 50
-  damagePerNewton: 0.1
-  safeHeadImpulse: 5
-  impulseDoublingInterval: 10
-  exponentialDamageScale: 5
-  maxDamagePerHit: 100
-  hitCooldown: 0.4
-  minimumIncomingBallSpeed: 0.25
-  headRegionFraction: 0.35
-  minimumHeadNormalAlignment: 0.55
 --- !u!114 &494599914887892077
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2318,9 +2290,6 @@ PrefabInstance:
       addedObject: {fileID: 1173318721008877382}
     - targetCorrespondingSourceObject: {fileID: 8413546001705318516, guid: 308ea7fccb758f74689de1c65917efaf, type: 3}
       insertIndex: -1
-      addedObject: {fileID: 1173318721008877381}
-    - targetCorrespondingSourceObject: {fileID: 8413546001705318516, guid: 308ea7fccb758f74689de1c65917efaf, type: 3}
-      insertIndex: -1
       addedObject: {fileID: 1173318721008877380}
     - targetCorrespondingSourceObject: {fileID: 8413546001705318516, guid: 308ea7fccb758f74689de1c65917efaf, type: 3}
       insertIndex: -1
@@ -2360,20 +2329,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c66e90905456f5a43a9cd17b42072449, type: 3}
   m_Name: 
   m_EditorClassIdentifier: GravityPrototype.Runtime::GravityPrototype.PlayerHealthHUD
---- !u!114 &1173318721008877381
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 338631656}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 53e9fd645d68f5f49891cfc0a6a42a8b, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: GravityPrototype.Runtime::GravityPrototype.PlayerFallDamage2D
-  safeFallHeight: 3
-  damagePerMeter: 20
 --- !u!114 &1173318721008877382
 MonoBehaviour:
   m_ObjectHideFlags: 0

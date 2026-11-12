@@ -4,49 +4,75 @@ using UnityEngine;
 namespace GravityPrototype.Progress
 {
     /// <summary>
-    /// Player settings shared by every scene: master volume, effect volume and fullscreen. Values are
-    /// persisted in PlayerPrefs and applied immediately, so the settings popup only has to set a
-    /// property. The effect volume is stored for the audio layer to consume; there is no audio mixer
-    /// in this prototype yet, so only the master volume changes AudioListener.volume. Fullscreen is
-    /// applied when it changes, never while loading a scene, so the editor game view stays untouched.
+    /// 玩家设置（设计文档 2.8.2.1）：窗口大小 3 档、主音量/音效音量 5 档、全屏开关。
+    /// 值写入 PlayerPrefs 并立即生效；窗口大小和全屏只在“改变时”应用，不在场景加载时强制套用，
+    /// 以免编辑器 Game 视图被意外改尺寸。
     /// </summary>
     public static class GameSettingsStore
     {
-        public const float DefaultVolume = 0.8f;
+        /// <summary>窗口大小 3 档（设计文档 2.8.2.1）。</summary>
+        public static readonly Vector2Int[] Resolutions =
+        {
+            new Vector2Int(1280, 720),
+            new Vector2Int(1600, 900),
+            new Vector2Int(1920, 1080)
+        };
+
+        /// <summary>音量 5 档：0% / 25% / 50% / 75% / 100%。</summary>
+        public static readonly float[] VolumeSteps = { 0f, 0.25f, 0.5f, 0.75f, 1f };
+
+        public const int DefaultResolutionIndex = 1;
+        public const int DefaultVolumeStep = 3;
         public const bool DefaultFullscreen = true;
 
-        private const string MasterVolumeKey = "GravityPrototype.Settings.MasterVolume";
-        private const string EffectVolumeKey = "GravityPrototype.Settings.EffectVolume";
+        private const string MasterStepKey = "GravityPrototype.Settings.MasterStep";
+        private const string EffectStepKey = "GravityPrototype.Settings.EffectStep";
         private const string FullscreenKey = "GravityPrototype.Settings.Fullscreen";
+        private const string ResolutionKey = "GravityPrototype.Settings.Resolution";
 
         private static bool loaded;
-        private static float masterVolume = DefaultVolume;
-        private static float effectVolume = DefaultVolume;
+        private static int masterStep = DefaultVolumeStep;
+        private static int effectStep = DefaultVolumeStep;
         private static bool fullscreen = DefaultFullscreen;
+        private static int resolutionIndex = DefaultResolutionIndex;
 
         /// <summary>Raised after any value or the applied state changed.</summary>
         public static event Action Changed;
 
         public static float MasterVolume
         {
-            get { EnsureLoaded(); return masterVolume; }
+            get { EnsureLoaded(); return VolumeSteps[masterStep]; }
+            set { MasterStep = NearestStep(value); }
+        }
+
+        public static float EffectVolume
+        {
+            get { EnsureLoaded(); return VolumeSteps[effectStep]; }
+            set { EffectStep = NearestStep(value); }
+        }
+
+        /// <summary>主音量档位 0..4。</summary>
+        public static int MasterStep
+        {
+            get { EnsureLoaded(); return masterStep; }
             set
             {
                 EnsureLoaded();
-                masterVolume = Mathf.Clamp01(value);
-                AudioListener.volume = masterVolume;
+                masterStep = Mathf.Clamp(value, 0, VolumeSteps.Length - 1);
+                AudioListener.volume = VolumeSteps[masterStep];
                 Persist();
                 Changed?.Invoke();
             }
         }
 
-        public static float EffectVolume
+        /// <summary>音效音量档位 0..4。</summary>
+        public static int EffectStep
         {
-            get { EnsureLoaded(); return effectVolume; }
+            get { EnsureLoaded(); return effectStep; }
             set
             {
                 EnsureLoaded();
-                effectVolume = Mathf.Clamp01(value);
+                effectStep = Mathf.Clamp(value, 0, VolumeSteps.Length - 1);
                 Persist();
                 Changed?.Invoke();
             }
@@ -65,12 +91,29 @@ namespace GravityPrototype.Progress
             }
         }
 
+        /// <summary>窗口大小档位 0..2，改变时立即套用。</summary>
+        public static int ResolutionIndex
+        {
+            get { EnsureLoaded(); return resolutionIndex; }
+            set
+            {
+                EnsureLoaded();
+                resolutionIndex = Mathf.Clamp(value, 0, Resolutions.Length - 1);
+                ApplyResolution();
+                Persist();
+                Changed?.Invoke();
+            }
+        }
+
+        public static Vector2Int CurrentResolution => Resolutions[Mathf.Clamp(ResolutionIndex, 0, Resolutions.Length - 1)];
+
         public static void Load()
         {
             loaded = true;
-            masterVolume = Mathf.Clamp01(PlayerPrefs.GetFloat(MasterVolumeKey, DefaultVolume));
-            effectVolume = Mathf.Clamp01(PlayerPrefs.GetFloat(EffectVolumeKey, DefaultVolume));
+            masterStep = Mathf.Clamp(PlayerPrefs.GetInt(MasterStepKey, DefaultVolumeStep), 0, VolumeSteps.Length - 1);
+            effectStep = Mathf.Clamp(PlayerPrefs.GetInt(EffectStepKey, DefaultVolumeStep), 0, VolumeSteps.Length - 1);
             fullscreen = PlayerPrefs.GetInt(FullscreenKey, DefaultFullscreen ? 1 : 0) == 1;
+            resolutionIndex = Mathf.Clamp(PlayerPrefs.GetInt(ResolutionKey, DefaultResolutionIndex), 0, Resolutions.Length - 1);
             ApplyAll();
             Changed?.Invoke();
         }
@@ -78,18 +121,44 @@ namespace GravityPrototype.Progress
         public static void ResetToDefaults()
         {
             loaded = true;
-            masterVolume = DefaultVolume;
-            effectVolume = DefaultVolume;
+            masterStep = DefaultVolumeStep;
+            effectStep = DefaultVolumeStep;
             fullscreen = DefaultFullscreen;
+            resolutionIndex = DefaultResolutionIndex;
             ApplyAll();
             Persist();
             Changed?.Invoke();
         }
 
-        /// <summary>Re-applies the stored volume, e.g. after a scene load replaced the AudioListener.</summary>
+        /// <summary>重新套用音量（例如换场景后 AudioListener 被替换）。窗口/全屏不在这里强制套用。</summary>
         public static void ApplyAll()
         {
-            AudioListener.volume = masterVolume;
+            AudioListener.volume = VolumeSteps[masterStep];
+        }
+
+        private static int NearestStep(float value)
+        {
+            float clamped = Mathf.Clamp01(value);
+            int best = 0;
+            float bestDistance = float.MaxValue;
+            for (int i = 0; i < VolumeSteps.Length; i++)
+            {
+                float distance = Mathf.Abs(VolumeSteps[i] - clamped);
+                if (distance < bestDistance)
+                {
+                    bestDistance = distance;
+                    best = i;
+                }
+            }
+
+            return best;
+        }
+
+        private static void ApplyResolution()
+        {
+            Vector2Int size = Resolutions[Mathf.Clamp(resolutionIndex, 0, Resolutions.Length - 1)];
+            if (Screen.width == size.x && Screen.height == size.y && !Screen.fullScreen) return;
+            Screen.SetResolution(size.x, size.y, FullScreenMode.Windowed);
         }
 
         private static void ApplyFullscreen()
@@ -102,9 +171,10 @@ namespace GravityPrototype.Progress
 
         private static void Persist()
         {
-            PlayerPrefs.SetFloat(MasterVolumeKey, masterVolume);
-            PlayerPrefs.SetFloat(EffectVolumeKey, effectVolume);
+            PlayerPrefs.SetInt(MasterStepKey, masterStep);
+            PlayerPrefs.SetInt(EffectStepKey, effectStep);
             PlayerPrefs.SetInt(FullscreenKey, fullscreen ? 1 : 0);
+            PlayerPrefs.SetInt(ResolutionKey, resolutionIndex);
             PlayerPrefs.Save();
         }
 

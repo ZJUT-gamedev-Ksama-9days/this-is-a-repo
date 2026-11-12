@@ -26,6 +26,13 @@ namespace GravityPrototype
         public Vector2 Acceleration => direction.normalized * acceleration;
         public int Priority => priority;
         public float Influence { get; private set; } = 1f;
+        public Vector2 Direction => direction;
+
+        /// <summary>设置世界空间重力方向；零向量表示失重。重力框右键切换用。</summary>
+        public void SetDirection(Vector2 next)
+        {
+            direction = next.sqrMagnitude > 1e-6f ? next.normalized : Vector2.zero;
+        }
 
         public void SetInfluence(float value)
         {

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace GravityPrototype
@@ -22,7 +23,7 @@ namespace GravityPrototype
             Swallowing
         }
 
-        [SerializeField, Tooltip("被吸入的小球；留空时自动使用场景中的 GravityBody2D。")]
+        [SerializeField, Tooltip("主小球（留空时取场景中第一个小球）；异常门会吞下任何落入的小球。")]
         private Rigidbody2D ball;
         [SerializeField, Tooltip("小球重生点；留空时使用小球在 Awake 时的位置。")]
         private Transform ballSpawn;
@@ -47,20 +48,28 @@ namespace GravityPrototype
         [SerializeField, Min(0f), Tooltip("小球重生后到重新布防的延迟，秒。")]
         private float rearmSeconds = 0.4f;
 
-        private Collider2D[] ballColliders;
-        private RigidbodyType2D ballBodyType;
-        private Vector2 spawnPosition;
-        private float spawnRotation;
+        private sealed class BallRecord
+        {
+            public Rigidbody2D body;
+            public Collider2D[] colliders;
+            public RigidbodyType2D bodyType;
+            public Vector2 spawn;
+            public float spawnRotation;
+        }
+
+        private BallRecord[] records = new BallRecord[0];
+        private BallRecord primary;
+        private BallRecord inside;
+        private BallRecord active;
         private Vector2 swallowStart;
         private GateState state = GateState.Closed;
         private float stateTimer;
         private float rearmUntil;
-        private bool ballInside;
 
         public event Action<AnomalyGate2D, Rigidbody2D> BallCaptured;
         public event Action<AnomalyGate2D, Rigidbody2D> BallRespawned;
 
-        public Rigidbody2D Ball => ball;
+        public Rigidbody2D Ball => active != null ? active.body : primary != null ? primary.body : ball;
         public bool IsOpen => state != GateState.Closed;
 
         private Vector2 HolePosition => hole != null ? (Vector2)hole.position : (Vector2)transform.position;
@@ -73,54 +82,69 @@ namespace GravityPrototype
                 gateCollider.isTrigger = true;
             }
 
-            if (ball == null)
+            // 任何小球落入异常门都可以被吞：取最先进入的那一个。
+            var found = new List<BallRecord>();
+            foreach (var candidate in FindObjectsByType<BallMaterial2D>(FindObjectsSortMode.None))
             {
-                BallMaterial2D[] candidates = FindObjectsByType<BallMaterial2D>(FindObjectsSortMode.None);
-                foreach (var candidate in candidates)
-                {
-                    if (candidate.gameObject.scene != gameObject.scene) continue;
-                    if (ball != null) { ball = null; Debug.LogWarning("Multiple balls: assign AnomalyGate2D.ball explicitly.", this); break; }
-                    ball = candidate.GetComponent<Rigidbody2D>();
-                }
+                if (candidate.gameObject.scene != gameObject.scene) continue;
+                Rigidbody2D body = candidate.GetComponent<Rigidbody2D>();
+                if (body == null || body.GetComponent<PlayerController2D>() != null) continue;
+                found.Add(Capture(body));
             }
 
             if (ball != null && ball.GetComponent<PlayerController2D>() != null) ball = null;
-            if (ball != null)
+            if (ball != null && !found.Exists(r => r.body == ball)) found.Add(Capture(ball));
+            if (ball == null && found.Count > 0) ball = found[0].body;
+            records = found.ToArray();
+            primary = FindRecord(ball);
+
+            SetVisuals(false);
+        }
+
+        private BallRecord Capture(Rigidbody2D body)
+        {
+            bool useAuthorSpawn = ballSpawn != null && body == ball;
+            return new BallRecord
             {
-                ballColliders = ball.GetComponentsInChildren<Collider2D>();
-                ballBodyType = ball.bodyType;
-                spawnPosition = ballSpawn != null ? (Vector2)ballSpawn.position : ball.position;
-                spawnRotation = ballSpawn != null ? ballSpawn.eulerAngles.z : ball.rotation;
+                body = body,
+                colliders = body.GetComponentsInChildren<Collider2D>(),
+                bodyType = body.bodyType,
+                spawn = useAuthorSpawn ? (Vector2)ballSpawn.position : body.position,
+                spawnRotation = useAuthorSpawn ? ballSpawn.eulerAngles.z : body.rotation
+            };
+        }
+
+        private BallRecord FindRecord(Rigidbody2D body)
+        {
+            if (body == null) return null;
+            for (int i = 0; i < records.Length; i++)
+            {
+                if (records[i].body == body) return records[i];
             }
 
-            ApplyBarrierPassThrough(false);
-            SetVisuals(false);
+            return null;
         }
 
         private void OnTriggerEnter2D(Collider2D other)
         {
-            if (!isActiveAndEnabled || !IsBall(other))
-            {
-                return;
-            }
-
-            ballInside = true;
+            if (!isActiveAndEnabled) return;
+            BallRecord record = FindRecord(other.attachedRigidbody);
+            if (record == null) return;
+            inside = record;
             if (state != GateState.Closed || Time.time < rearmUntil)
             {
                 return;
             }
 
-            BeginOpening();
+            BeginOpening(record);
         }
 
         private void OnTriggerExit2D(Collider2D other)
         {
-            if (!isActiveAndEnabled || !IsBall(other))
-            {
-                return;
-            }
-
-            ballInside = false;
+            if (!isActiveAndEnabled) return;
+            BallRecord record = FindRecord(other.attachedRigidbody);
+            if (record == null || record != inside) return;
+            inside = null;
             // Nothing was swallowed yet: drop the attempt instead of pulling a ball that left the zone.
             if (state == GateState.Opening || state == GateState.Sucking)
             {
@@ -128,27 +152,24 @@ namespace GravityPrototype
             }
         }
 
-        private bool IsBall(Collider2D other)
-        {
-            return ball != null && other.attachedRigidbody == ball;
-        }
 
-        private void BeginOpening()
+        private void BeginOpening(BallRecord record)
         {
+            active = record;
             state = GateState.Opening;
             stateTimer = 0f;
             SetVisuals(true);
-            ApplyBarrierPassThrough(true);
+            ApplyBarrierPassThrough(record, true);
         }
 
         private void FixedUpdate()
         {
-            if (ball == null)
+            if (records.Length == 0)
             {
                 return;
             }
 
-            if (state == GateState.Closed && ballInside && Time.time >= rearmUntil) BeginOpening();
+            if (state == GateState.Closed && inside != null && Time.time >= rearmUntil) BeginOpening(inside);
             switch (state)
             {
                 case GateState.Opening:
@@ -173,14 +194,15 @@ namespace GravityPrototype
 
         private void Suck()
         {
-            if (!ballInside)
+            Rigidbody2D body = active != null ? active.body : null;
+            if (inside == null || body == null)
             {
                 // The exit callback normally handles this; the check also covers a collider switched off.
                 CloseGate();
                 return;
             }
 
-            Vector2 offset = HolePosition - ball.worldCenterOfMass;
+            Vector2 offset = HolePosition - body.worldCenterOfMass;
             if (offset.magnitude <= captureRadius)
             {
                 BeginSwallow();
@@ -188,39 +210,53 @@ namespace GravityPrototype
             }
 
             // Force pull keeps the ball dynamic, so it still collides instead of being teleported inward.
-            ball.AddForce(offset.normalized * (suctionAcceleration * ball.mass), ForceMode2D.Force);
-            float speed = ball.linearVelocity.magnitude;
+            body.AddForce(offset.normalized * (suctionAcceleration * body.mass), ForceMode2D.Force);
+            float speed = body.linearVelocity.magnitude;
             if (speed > maxSuctionSpeed)
             {
                 // Only the safety cap rewrites velocity: it is what stops a fast ball from tunnelling.
-                ball.linearVelocity *= maxSuctionSpeed / speed;
+                body.linearVelocity *= maxSuctionSpeed / speed;
             }
 
-            ball.WakeUp();
+            body.WakeUp();
         }
 
         private void BeginSwallow()
         {
+            Rigidbody2D body = active != null ? active.body : null;
+            if (body == null)
+            {
+                CloseGate();
+                return;
+            }
+
             var arm = FindFirstObjectByType<MechanicalArm2D>();
-            if (arm != null && arm.GrabbedBody == ball) arm.Release();
+            if (arm != null && arm.GrabbedBody == body) arm.Release();
             state = GateState.Swallowing;
             stateTimer = 0f;
-            swallowStart = ball.position;
+            swallowStart = body.position;
             // Kinematic on the last stretch: no solver impulse, no tunnelling, and GravityBody2D stops pulling.
-            ball.bodyType = RigidbodyType2D.Kinematic;
+            body.bodyType = RigidbodyType2D.Kinematic;
             // Unity 6 renamed Rigidbody2D.velocity to linearVelocity.
-            ball.linearVelocity = Vector2.zero;
-            ball.angularVelocity = 0f;
-            ball.WakeUp();
-            BallCaptured?.Invoke(this, ball);
+            body.linearVelocity = Vector2.zero;
+            body.angularVelocity = 0f;
+            body.WakeUp();
+            BallCaptured?.Invoke(this, body);
         }
 
         private void Swallow()
         {
             stateTimer += Time.fixedDeltaTime;
             float progress = Mathf.Clamp01(stateTimer / swallowSeconds);
+            Rigidbody2D body = active != null ? active.body : null;
+            if (body == null)
+            {
+                CloseGate();
+                return;
+            }
+
             Vector2 target = Vector2.Lerp(swallowStart, HolePosition, Mathf.SmoothStep(0f, 1f, progress));
-            ball.MovePosition(target);
+            body.MovePosition(target);
             if (progress >= 1f)
             {
                 RespawnBall();
@@ -228,25 +264,27 @@ namespace GravityPrototype
             }
         }
 
-        /// <summary>Puts the ball back on its start pose, used by the gate and by in-place level resets.</summary>
+        /// <summary>Puts the swallowed ball back on its own start pose, used by the gate and by in-place level resets.</summary>
         public void RespawnBall()
         {
-            if (ball == null)
+            BallRecord record = active ?? primary;
+            if (record == null || record.body == null)
             {
                 return;
             }
 
-            ball.bodyType = ballBodyType;
-            ball.position = spawnPosition;
-            ball.rotation = spawnRotation;
+            Rigidbody2D body = record.body;
+            body.bodyType = record.bodyType;
+            body.position = record.spawn;
+            body.rotation = record.spawnRotation;
             // Unity 6 renamed Rigidbody2D.velocity to linearVelocity.
-            ball.linearVelocity = Vector2.zero;
-            ball.angularVelocity = 0f;
+            body.linearVelocity = Vector2.zero;
+            body.angularVelocity = 0f;
             // Clear the authored transform too, so interpolated rendering shows the respawn immediately.
-            ball.transform.SetPositionAndRotation(spawnPosition, Quaternion.Euler(0f, 0f, spawnRotation));
-            ball.WakeUp();
-            ballInside = false;
-            BallRespawned?.Invoke(this, ball);
+            body.transform.SetPositionAndRotation(record.spawn, Quaternion.Euler(0f, 0f, record.spawnRotation));
+            body.WakeUp();
+            if (inside == record) inside = null;
+            BallRespawned?.Invoke(this, body);
         }
 
         private void CloseGate()
@@ -255,7 +293,8 @@ namespace GravityPrototype
             stateTimer = 0f;
             rearmUntil = Time.time + Mathf.Max(0f, rearmSeconds);
             SetVisuals(false);
-            ApplyBarrierPassThrough(false);
+            ApplyBarrierPassThrough(active, false);
+            active = null;
         }
 
         private void SetVisuals(bool open)
@@ -271,9 +310,9 @@ namespace GravityPrototype
             }
         }
 
-        private void ApplyBarrierPassThrough(bool passThrough)
+        private void ApplyBarrierPassThrough(BallRecord record, bool passThrough)
         {
-            if (ballColliders == null || barrierColliders == null)
+            if (record == null || record.colliders == null || barrierColliders == null)
             {
                 return;
             }
@@ -287,11 +326,11 @@ namespace GravityPrototype
                 }
 
                 // Ignoring collisions instead of disabling the leaf keeps the ball and door from popping apart.
-                for (int j = 0; j < ballColliders.Length; j++)
+                for (int j = 0; j < record.colliders.Length; j++)
                 {
-                    if (ballColliders[j] != null)
+                    if (record.colliders[j] != null)
                     {
-                        Physics2D.IgnoreCollision(ballColliders[j], barrier, passThrough);
+                        Physics2D.IgnoreCollision(record.colliders[j], barrier, passThrough);
                     }
                 }
             }
@@ -299,17 +338,18 @@ namespace GravityPrototype
 
         private void OnDisable()
         {
-            ApplyBarrierPassThrough(false);
-            if (state == GateState.Swallowing && ball != null)
+            ApplyBarrierPassThrough(active, false);
+            if (state == GateState.Swallowing && active != null && active.body != null)
             {
                 // A gate switched off mid-swallow must never leave the ball kinematic.
-                ball.bodyType = ballBodyType;
+                active.body.bodyType = active.bodyType;
                 // Unity 6 renamed Rigidbody2D.velocity to linearVelocity.
-                ball.linearVelocity = Vector2.zero;
-                ball.WakeUp();
+                active.body.linearVelocity = Vector2.zero;
+                active.body.WakeUp();
             }
 
-            ballInside = false;
+            inside = null;
+            active = null;
             state = GateState.Closed;
         }
 

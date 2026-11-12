@@ -43,7 +43,6 @@ namespace GravityPrototype.Editor
                 PrefabUtility.RecordPrefabInstancePropertyModifications(ball.GetComponent<CircleCollider2D>());
                 PrefabUtility.RecordPrefabInstancePropertyModifications(ball.GetComponent<SpriteRenderer>());
             }
-            if (ball.GetComponent<BallImpactDamage2D>() == null) Undo.AddComponent<BallImpactDamage2D>(ball);
 
             SerializedObject properties = new SerializedObject(controls);
             SerializedProperty array = properties.FindProperty("ballProfiles");
@@ -131,7 +130,6 @@ namespace GravityPrototype.Editor
                 ball.AddComponent<GravityBody2D>();
                 BallMaterial2D material = ball.AddComponent<BallMaterial2D>();
                 material.ApplyProfile(profile);
-                ball.AddComponent<BallImpactDamage2D>();
                 AddDetail(ball.transform, circle, "Highlight", new Vector2(-0.16f, 0.18f),
                     new Vector2(0.14f, 0.2f), new Color(1f, 1f, 1f, 0.7f));
                 if (profile.Kind == BallMaterialKind.Balloon)

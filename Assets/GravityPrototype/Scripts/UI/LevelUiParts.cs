@@ -11,6 +11,7 @@ namespace GravityPrototype.UI
         public PausePopupView PausePopup;
         public RecordsPopupView RecordsPopup;
         public SettingsPopupView SettingsPopup;
+        public DefeatPopupView DefeatPopup;
         public VictoryEffectView VictoryEffect;
         public ToastView Toast;
     }

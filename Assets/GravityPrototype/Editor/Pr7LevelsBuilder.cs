@@ -55,10 +55,11 @@ namespace GravityPrototype.Editor
                 if(child.name!="level "+index&&child.name!="level "+index+" overlay")UnityEngine.Object.DestroyImmediate(child.gameObject);
             var map=grid.transform.Find("level "+index).GetComponent<Tilemap>();
             var circuit=grid.transform.Find("level "+index+" overlay").GetComponent<Tilemap>();
-            circuit.GetComponent<TilemapRenderer>().sortingOrder=2;
+            // Keep the circuit art one layer beneath the terrain tilemap (level = 0).
+            circuit.GetComponent<TilemapRenderer>().sortingOrder=-1;
             var terrain=new GameObject("Terrain Collisions");terrain.transform.SetParent(grid.transform,false);
             var props=new GameObject("Mechanisms");props.transform.SetParent(grid.transform,false);
-            var platforms=new List<Transform>();var levers=new List<LeverMechanism2D>();var gates=new List<Collider2D>();var switches=new List<CircuitSwitch2D>();var anomaly=new List<AnomalyGate2D>();
+            var platforms=new List<Transform>();var levers=new List<LeverMechanism2D>();var circuitDoors=new List<CircuitGate2D>();var anomaly=new List<AnomalyGate2D>();
             LevelGoal2D goal=null;
             foreach(var cell in map.cellBounds.allPositionsWithin)
             {
@@ -85,9 +86,8 @@ namespace GravityPrototype.Editor
                 else if(name.StartsWith("杠杆"))
                 {var c=go.AddComponent<BoxCollider2D>();c.size=Vector2.one*.8f;c.isTrigger=true;levers.Add(go.AddComponent<LeverMechanism2D>());}
                 else if(name.StartsWith("电路门"))
-                {var c=go.AddComponent<BoxCollider2D>();c.size=new Vector2(.7f,1.15f);gates.Add(c);}
-                else if(name.StartsWith("电闸"))
-                {var c=go.AddComponent<BoxCollider2D>();c.size=Vector2.one*.85f;c.isTrigger=true;switches.Add(go.AddComponent<CircuitSwitch2D>());}
+                {var c=go.AddComponent<BoxCollider2D>();c.size=new Vector2(.7f,1.15f);circuitDoors.Add(go.AddComponent<CircuitGate2D>());}
+                // 电闸是装饰：没有交互也没有碰撞体，电路是否通路与它无关。
                 else if(name.StartsWith("异常门"))
                 {var c=go.AddComponent<BoxCollider2D>();c.size=new Vector2(.8f,1f);c.isTrigger=true;anomaly.Add(go.AddComponent<AnomalyGate2D>());}
                 else if(name.StartsWith("陨石"))
@@ -99,18 +99,29 @@ namespace GravityPrototype.Editor
                 var platform=platforms.OrderBy(t=>(t.position-lever.transform.position).sqrMagnitude).First();
                 Set(lever,"platform",platform);Set(lever,"platformBody",platform.GetComponent<Rigidbody2D>());
             }
-            foreach(var sw in switches)
+            // 2.5.1：第 1 关没有小球，第 2 关 1 个，第 3 关 2 个，第 4/5 关 3 个。
+            int ballCount=index==1?0:index==2?1:index==3?2:3;
+            var balls=new List<Rigidbody2D>();
+            for(int b=0;b<ballCount;b++)balls.Add(CreateBall(props.transform,new Vector2(-7.5f+b*.7f,Spawns[index-1].y+.5f+b*.6f)));
+            var ball=balls.Count>0?balls[0]:null;
+            foreach(var door in circuitDoors)
             {
-                var so=new SerializedObject(sw);var a=so.FindProperty("barriers");a.arraySize=gates.Count;
-                for(int i=0;i<gates.Count;i++)a.GetArrayElementAtIndex(i).objectReferenceValue=gates[i];
+                var so=new SerializedObject(door);
                 so.FindProperty("circuit").objectReferenceValue=circuit;
                 foreach(var pair in new[]{("emptyStraight","空直电路"),("poweredStraight","通直电路"),("emptyCorner","空弯电路"),("poweredCorner","通弯电路")})
                     so.FindProperty(pair.Item1).objectReferenceValue=AssetDatabase.LoadAssetAtPath<Tile>("Assets/Tile/"+pair.Item2+"_0.asset");
                 so.ApplyModifiedPropertiesWithoutUndo();
             }
-            var ball=CreateBall(props.transform,new Vector2(-7.5f,Spawns[index-1].y+.5f));
-            foreach(var gate in anomaly)Set(gate,"ball",ball);
+            // 2.3.6.3：没有电路门的关卡（第一、二关）一开始就通路，贴图直接用通电的蓝色版本。
+            if(circuitDoors.Count==0)
+            {
+                circuit.SwapTile(AssetDatabase.LoadAssetAtPath<Tile>("Assets/Tile/空直电路_0.asset"),AssetDatabase.LoadAssetAtPath<Tile>("Assets/Tile/通直电路_0.asset"));
+                circuit.SwapTile(AssetDatabase.LoadAssetAtPath<Tile>("Assets/Tile/空弯电路_0.asset"),AssetDatabase.LoadAssetAtPath<Tile>("Assets/Tile/通弯电路_0.asset"));
+            }
+            foreach(var gate in anomaly)if(ball!=null)Set(gate,"ball",ball);
             if(goal==null)throw new InvalidOperationException("Goal missing in PR7 level "+index);
+            // 2.3.6.1 + 2.5.1：第 1 关目标门常开；第 2–5 关由小球到达后才打开。
+            var goalProperties=new SerializedObject(goal);goalProperties.FindProperty("opensWithBall").boolValue=ballCount>0;goalProperties.ApplyModifiedPropertiesWithoutUndo();
             var level=scene.GetRootGameObjects().Single(r=>r.name=="Level").GetComponent<LevelController>();
             var levelProperties=new SerializedObject(level);levelProperties.FindProperty("levelId").stringValue=IdFor(index);
             levelProperties.FindProperty("goal").objectReferenceValue=goal;levelProperties.ApplyModifiedPropertiesWithoutUndo();
@@ -130,7 +141,7 @@ namespace GravityPrototype.Editor
             go.AddComponent<CircleCollider2D>();go.AddComponent<GravityBody2D>();var material=go.AddComponent<BallMaterial2D>();
             var profile=AssetDatabase.FindAssets("t:BallPhysicsProfile").Select(AssetDatabase.GUIDToAssetPath).First(p=>p.Contains("Wood"));
             material.ApplyProfile(AssetDatabase.LoadAssetAtPath<BallPhysicsProfile>(profile));
-            go.GetComponent<SpriteRenderer>().color=Color.white;go.AddComponent<BallImpactDamage2D>();return body;
+            go.GetComponent<SpriteRenderer>().color=Color.white;return body;
         }
         private static void Set(UnityEngine.Object target,string field,UnityEngine.Object value)
         {var so=new SerializedObject(target);so.FindProperty(field).objectReferenceValue=value;so.ApplyModifiedPropertiesWithoutUndo();}

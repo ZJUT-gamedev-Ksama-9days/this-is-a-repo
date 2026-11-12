@@ -3865,6 +3865,10 @@ MonoBehaviour:
   deathRestartDelay: 0.7
   restartWithRKey: 1
   readKeyboardInput: 1
+  voidMargin: 0.8
+  playerDiesInVoid: 1
+  ballsReturnFromVoid: 1
+  autoRestartOnDeath: 1
 --- !u!114 &1558498459
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -4097,6 +4101,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: GravityPrototype.Runtime::GravityPrototype.LevelGoal2D
   visualOnReached: {fileID: 1718432674}
+  opensWithBall: 0
+  requiresConnectedCircuit: 1
 --- !u!4 &1665306246
 Transform:
   m_ObjectHideFlags: 0
